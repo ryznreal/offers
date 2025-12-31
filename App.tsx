@@ -11,7 +11,7 @@ import { Login } from './views/Login';
 import { TeamManagement } from './views/TeamManagement';
 import { Property, PropertyType, FilterState, User, UserRole, Project, UnitType, UnitAvailability } from './types';
 import { MOCK_PROPERTIES, MOCK_USERS, MOCK_PROJECTS } from './constants';
-import { Plus, Building2, Map, ShieldCheck, Share2, LogOut, Users } from './components/Icon';
+import { Plus, Building2, Map, LogOut, Users } from './components/Icon';
 
 const STORAGE_KEYS = {
   PROPERTIES: 'realestate_base_properties',
@@ -64,9 +64,11 @@ function App() {
     landUse: 'All', isCorner: 'All', investmentAllowed: 'All'
   });
 
+  // مزامنة البيانات مع التخزين المحلي
   useEffect(() => { localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(baseProperties)); }, [baseProperties]);
   useEffect(() => { localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(projects)); }, [projects]);
   useEffect(() => { localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users)); }, [users]);
+  
   useEffect(() => { localStorage.setItem(STORAGE_KEYS.VIEW, view); }, [view]);
   useEffect(() => { 
     if (selectedProperty) localStorage.setItem(STORAGE_KEYS.SELECTED_PROP, JSON.stringify(selectedProperty));
@@ -111,14 +113,22 @@ function App() {
 
   useEffect(() => { refreshDisplayProperties(); }, [refreshDisplayProperties]);
 
+  // دالة تسجيل الخروج المحسنة لضمان العودة لصفحة الدخول
   const handleLogout = () => {
+    // ١. مسح الجلسة من التخزين المحلي
     localStorage.removeItem(STORAGE_KEYS.AUTH);
     localStorage.removeItem(STORAGE_KEYS.VIEW);
     localStorage.removeItem(STORAGE_KEYS.SELECTED_PROP);
     localStorage.removeItem(STORAGE_KEYS.SELECTED_PROJ_ID);
+    
+    // ٢. تصفير الحالات فوراً في الـ React State
     setCurrentUser(null);
+    setSelectedProperty(null);
+    setSelectedProjectId(null);
     setView('list');
-    window.location.reload(); // إعادة تحميل نظيفة
+    
+    // ٣. إعادة تحميل الصفحة لضمان نظافة البيئة والعودة لصفحة Login
+    window.location.reload();
   };
 
   const handleSaveProject = (project: Project) => {
@@ -144,6 +154,7 @@ function App() {
     setView('detail');
   };
 
+  // المكون الأساسي: إذا لم يكن هناك مستخدم، عرض صفحة الدخول
   if (!currentUser) {
     return <Login users={users} onLogin={setCurrentUser} />;
   }
@@ -156,22 +167,17 @@ function App() {
     switch (view) {
       case 'list':
         return <ListProperties properties={properties} onSelectProperty={handleSelectProperty} filter={filter} setFilter={setFilter} onOpenFilters={() => setIsMobileMenuOpen(true)} />;
-      
       case 'admin':
         if (!currentUser.permissions.canManageUsers) { setView('list'); return null; }
         return <AdminPanel developers={[]} users={users} onAddUser={u => setUsers(p => [u, ...p])} onUpdateUser={u => { setUsers(p => p.map(us => us.id === u.id ? u : us)); }} onDeleteUser={id => setUsers(p => p.filter(u => u.id !== id))} onImportProperties={() => {}} onBack={() => setView('list')} />;
-      
       case 'team':
         if (!currentUser.permissions.canManageTeam) { setView('list'); return null; }
         return <TeamManagement currentUser={currentUser} allUsers={users} onAddMember={u => setUsers(p => [u, ...p])} onDeleteMember={id => setUsers(p => p.filter(u => u.id !== id))} onBack={() => setView('list')} />;
-
       case 'projects':
         if (currentUser.role === UserRole.Agent) { setView('list'); return null; }
         return <DeveloperProjects projects={developerVisibleProjects} onSaveProject={handleSaveProject} onBack={() => setView('list')} externalProjectId={selectedProjectId} onSetExternalProjectId={setSelectedProjectId} />;
-
       case 'marketing':
         return <MarketingPortal projects={developerVisibleProjects} onUpdateProject={handleSaveProject} onBack={() => setView('list')} externalProjectId={selectedProjectId} onSetExternalProjectId={setSelectedProjectId} />;
-
       case 'select-type':
         return (
           <div className="flex items-center justify-center min-h-screen p-4 md:pr-[288px] bg-gray-50 text-right">
@@ -194,7 +200,6 @@ function App() {
             </div>
           </div>
         );
-
       case 'add-residential':
         return <AddProperty initialType={PropertyType.Residential} onSave={handleSaveProperty} onCancel={() => setView('list')} />;
       case 'add-land':
@@ -214,7 +219,7 @@ function App() {
         <h1 className="text-lg font-black text-primary-700 flex items-center gap-2"><Building2 size={20} />الوسيط</h1>
         <div className="flex gap-2">
           {currentUser.permissions.canManageTeam && <button onClick={() => setView('team')} className="p-2 bg-gray-50 rounded-xl text-primary-600"><Users size={18} /></button>}
-          <button onClick={handleLogout} className="p-2 bg-red-50 rounded-xl text-red-600"><LogOut size={18} /></button>
+          <button onClick={handleLogout} className="p-2 bg-red-50 rounded-xl text-red-600" title="تسجيل الخروج"><LogOut size={18} /></button>
         </div>
       </div>
       <main className="min-h-screen">{renderContent()}</main>

@@ -4,6 +4,7 @@
 // Added missing icons for DeveloperDocs and Navigation (Code, Database, FileJson, Layout, Shield, Zap, Globe, FileSpreadsheet)
 // Added Loader icon for loading states in SpecSheet
 // Added Copy icon for usage in SpecSheet
+// Added ChevronLeft to resolve import error in views/Login.tsx
 import { 
   Home, 
   Map, 
@@ -30,6 +31,7 @@ import {
   Share2,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
   ArrowUpDown,
   Users,
   ShieldCheck,
@@ -87,6 +89,7 @@ export {
   Share2,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
   ArrowUpDown,
   Users,
   ShieldCheck,
