@@ -16,11 +16,15 @@ const STORAGE_KEYS = {
   PROPERTIES: 'realestate_base_properties',
   PROJECTS: 'realestate_projects',
   USERS: 'realestate_users',
-  AUTH: 'realestate_auth_user'
+  AUTH: 'realestate_auth_user',
+  VIEW: 'realestate_current_view',
+  SELECTED_PROP: 'realestate_selected_prop',
+  SELECTED_PROJ_ID: 'realestate_selected_proj_id'
 };
 
 function App() {
-  const [view, setView] = useState<string>('list'); 
+  // حالة العرض الحالي - تقرأ من التخزين المحلي لضمان عدم العودة للرئيسية
+  const [view, setView] = useState<string>(() => localStorage.getItem(STORAGE_KEYS.VIEW) || 'list'); 
 
   const [baseProperties, setBaseProperties] = useState<Property[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.PROPERTIES);
@@ -42,6 +46,16 @@ function App() {
     return saved ? JSON.parse(saved) : null;
   });
 
+  // حالة العنصر المختار (عقار أو مشروع) - مستمرة عبر التحديث
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.SELECTED_PROP);
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(() => 
+    localStorage.getItem(STORAGE_KEYS.SELECTED_PROJ_ID)
+  );
+
   const [properties, setProperties] = useState<Property[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
@@ -51,9 +65,22 @@ function App() {
     landUse: 'All', isCorner: 'All', investmentAllowed: 'All'
   });
 
+  // مزامنة البيانات الأساسية
   useEffect(() => { localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(baseProperties)); }, [baseProperties]);
   useEffect(() => { localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(projects)); }, [projects]);
   useEffect(() => { localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users)); }, [users]);
+  
+  // مزامنة حالة العرض والتنقل
+  useEffect(() => { localStorage.setItem(STORAGE_KEYS.VIEW, view); }, [view]);
+  useEffect(() => { 
+    if (selectedProperty) localStorage.setItem(STORAGE_KEYS.SELECTED_PROP, JSON.stringify(selectedProperty));
+    else localStorage.removeItem(STORAGE_KEYS.SELECTED_PROP);
+  }, [selectedProperty]);
+  useEffect(() => {
+    if (selectedProjectId) localStorage.setItem(STORAGE_KEYS.SELECTED_PROJ_ID, selectedProjectId);
+    else localStorage.removeItem(STORAGE_KEYS.SELECTED_PROJ_ID);
+  }, [selectedProjectId]);
+
   useEffect(() => {
     if (currentUser) localStorage.setItem(STORAGE_KEYS.AUTH, JSON.stringify(currentUser));
     else localStorage.removeItem(STORAGE_KEYS.AUTH);
@@ -107,16 +134,12 @@ function App() {
     setView('detail');
   };
 
-  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
-
   if (!currentUser) {
     return <Login users={users} onLogin={setCurrentUser} />;
   }
 
-  // استخراج قائمة المطورين الفريدة للإدارة
   const uniqueDevelopers = Array.from(new Set(projects.map(p => p.developer)));
 
-  // تصفية المشاريع لمدير التسويق
   const visibleProjects = currentUser.role === UserRole.Marketing && currentUser.assignedDeveloper
     ? projects.filter(p => p.developer === currentUser.assignedDeveloper)
     : projects;
@@ -127,19 +150,16 @@ function App() {
         return <ListProperties properties={properties} onSelectProperty={handleSelectProperty} filter={filter} setFilter={setFilter} onOpenFilters={() => setIsMobileMenuOpen(true)} />;
       
       case 'admin':
-        if (!currentUser.permissions.canManageUsers) {
-          setView('list');
-          return null;
-        }
+        if (!currentUser.permissions.canManageUsers) { setView('list'); return null; }
         return <AdminPanel developers={uniqueDevelopers} users={users} onAddUser={u => setUsers(p => [u, ...p])} onUpdateUser={u => { setUsers(p => p.map(us => us.id === u.id ? u : us)); if(currentUser.id === u.id) setCurrentUser(u); }} onDeleteUser={id => setUsers(p => p.filter(u => u.id !== id))} onImportProperties={props => {setBaseProperties(p => [...props, ...p]); setView('list');}} onBack={() => setView('list')} />;
       
       case 'projects':
         if (currentUser.role === UserRole.Viewer) { setView('list'); return null; }
-        return <DeveloperProjects projects={visibleProjects} onSaveProject={handleSaveProject} onBack={() => setView('list')} />;
+        return <DeveloperProjects projects={visibleProjects} onSaveProject={handleSaveProject} onBack={() => setView('list')} externalProjectId={selectedProjectId} onSetExternalProjectId={setSelectedProjectId} />;
 
       case 'marketing':
         if (currentUser.role === UserRole.Viewer) { setView('list'); return null; }
-        return <MarketingPortal projects={visibleProjects} onUpdateProject={handleSaveProject} onBack={() => setView('list')} />;
+        return <MarketingPortal projects={visibleProjects} onUpdateProject={handleSaveProject} onBack={() => setView('list')} externalProjectId={selectedProjectId} onSetExternalProjectId={setSelectedProjectId} />;
 
       case 'select-type':
         if (!currentUser.permissions.canAdd) { setView('list'); return null; }
@@ -171,7 +191,7 @@ function App() {
         return <AddProperty initialType={PropertyType.Land} onSave={handleSaveProperty} onCancel={() => setView('list')} />;
       case 'detail':
         if (!selectedProperty) return null;
-        return <ViewProperty property={selectedProperty} onBack={() => setView('list')} />;
+        return <ViewProperty property={selectedProperty} onBack={() => { setSelectedProperty(null); setView('list'); }} />;
       default:
         return <div>Not found</div>;
     }
@@ -179,7 +199,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
-      <Navigation currentView={view} setView={setView} filter={filter} setFilter={setFilter} isMobileOpen={isMobileMenuOpen} onCloseMobile={() => setIsMobileMenuOpen(false)} user={currentUser} onLogout={() => setCurrentUser(null)} />
+      <Navigation currentView={view} setView={setView} filter={filter} setFilter={setFilter} isMobileOpen={isMobileMenuOpen} onCloseMobile={() => setIsMobileMenuOpen(false)} user={currentUser} onLogout={() => { localStorage.clear(); setCurrentUser(null); }} />
       <div className="md:hidden bg-white p-4 shadow-sm flex justify-between items-center sticky top-0 z-40 border-b border-gray-100">
         <h1 className="text-lg font-black text-primary-700 flex items-center gap-2"><Building2 size={20} />الوسيط</h1>
         <div className="flex gap-2">
