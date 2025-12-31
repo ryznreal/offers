@@ -55,7 +55,8 @@ import {
   FileBadge,
   Loader,
   Copy,
-  Percent
+  Percent,
+  LogOut
 } from 'lucide-react';
 
 export {
@@ -109,5 +110,6 @@ export {
   FileBadge,
   Loader,
   Copy,
-  Percent
+  Percent,
+  LogOut
 };

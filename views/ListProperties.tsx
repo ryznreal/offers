@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { Property, PropertyType, FilterState, Status } from '../types';
 import { PropertyCard } from '../components/PropertyCard';
-import { Search, LayoutList, LayoutGrid, Filter, Building2, Map, Home, XCircle, ArrowRight, Bed, ArrowUpDown } from '../components/Icon';
+import { Search, LayoutList, LayoutGrid, Filter, Building2, Map, Home, XCircle, ArrowRight, Bed, ArrowUpDown, CheckCircle, Zap } from '../components/Icon';
 
 interface ListPropertiesProps {
   properties: Property[];
@@ -97,6 +98,10 @@ export const ListProperties: React.FC<ListPropertiesProps> = ({
     setFilter(prev => ({ ...prev, rooms }));
   };
 
+  const handleStatusSelect = (status: Status | 'All') => {
+    setFilter(prev => ({ ...prev, status }));
+  };
+
   return (
     <div className="p-4 md:p-8 md:pr-[288px]">
       <div className="max-w-[1600px] mx-auto">
@@ -150,9 +155,9 @@ export const ListProperties: React.FC<ListPropertiesProps> = ({
         </div>
 
         {/* Filters Row */}
-        <div className="flex flex-col md:flex-row md:items-center gap-6 mb-8">
+        <div className="flex flex-col md:flex-row md:items-center gap-6 mb-8 flex-wrap">
           {/* Property Type Tabs */}
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar shrink-0">
             <button 
               onClick={() => setFilter(prev => ({ ...prev, type: 'All', unitType: 'All' }))}
               className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all border whitespace-nowrap ${
@@ -178,6 +183,42 @@ export const ListProperties: React.FC<ListPropertiesProps> = ({
               الأراضي
             </button>
           </div>
+
+          {/* Status Quick Filters (New) */}
+          {filter.type !== PropertyType.Land && (
+            <div className="flex items-center gap-2 animate-in fade-in duration-500">
+               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-r pr-3 border-gray-200">الحالة</span>
+               <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => handleStatusSelect(Status.Ready)}
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-black transition-all border ${
+                      filter.status === Status.Ready 
+                      ? 'bg-green-600 text-white border-green-700 shadow-md' 
+                      : 'bg-white text-green-600 border-green-100 hover:bg-green-50'
+                    }`}
+                  >
+                    <CheckCircle size={12} />
+                    جاهز
+                  </button>
+                  <button
+                    onClick={() => handleStatusSelect(Status.UnderConstruction)}
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-black transition-all border ${
+                      filter.status === Status.UnderConstruction 
+                      ? 'bg-red-600 text-white border-red-700 shadow-md' 
+                      : 'bg-white text-red-600 border-red-100 hover:bg-red-50'
+                    }`}
+                  >
+                    <Zap size={12} />
+                    تحت الإنشاء
+                  </button>
+                  {filter.status !== 'All' && (
+                    <button onClick={() => handleStatusSelect('All')} className="text-gray-300 hover:text-red-500 transition-colors">
+                      <XCircle size={16} />
+                    </button>
+                  )}
+               </div>
+            </div>
+          )}
 
           {/* Rooms Selector - Hidden for Land only */}
           {filter.type !== PropertyType.Land && (
@@ -213,13 +254,21 @@ export const ListProperties: React.FC<ListPropertiesProps> = ({
         </div>
 
         {/* Active Filters Summary */}
-        {(filter.unitType !== 'All' || filter.rooms !== 'All' || filter.landUse !== 'All' || filter.sortOrder !== 'none' || filter.search) && (
+        {(filter.unitType !== 'All' || filter.rooms !== 'All' || filter.landUse !== 'All' || filter.status !== 'All' || filter.sortOrder !== 'none' || filter.search) && (
           <div className="flex flex-wrap items-center gap-2 mb-6">
             <span className="text-[9px] font-bold text-gray-300 uppercase">النشط:</span>
             {filter.unitType !== 'All' && (
               <span className="px-2 py-0.5 bg-primary-50 text-primary-600 rounded-md text-[8px] font-black border border-primary-100 flex items-center gap-1">
                 {filter.unitType}
                 <button onClick={() => setFilter(prev => ({ ...prev, unitType: 'All' }))}><XCircle size={10} /></button>
+              </span>
+            )}
+            {filter.status !== 'All' && (
+              <span className={`px-2 py-0.5 rounded-md text-[8px] font-black border flex items-center gap-1 ${
+                filter.status === Status.Ready ? 'bg-green-50 text-green-600 border-green-100' : 'bg-red-50 text-red-600 border-red-100'
+              }`}>
+                {filter.status}
+                <button onClick={() => setFilter(prev => ({ ...prev, status: 'All' }))}><XCircle size={10} /></button>
               </span>
             )}
             {filter.rooms !== 'All' && (
@@ -247,7 +296,7 @@ export const ListProperties: React.FC<ListPropertiesProps> = ({
           <div className="text-center py-20 bg-white rounded-[2rem] border border-gray-100 shadow-sm px-4">
             <Search size={32} className="text-gray-100 mx-auto mb-4" />
             <h3 className="text-lg font-black text-gray-900 mb-1">لا توجد نتائج</h3>
-            <p className="text-gray-400 text-[10px] font-bold">جرب تغيير معايير البحث أو اختيار عدد غرف مختلف</p>
+            <p className="text-gray-400 text-[10px] font-bold">جرب تغيير معايير البحث أو اختيار حالة عقار مختلفة</p>
           </div>
         ) : (
           <div className={`grid ${viewMode === 'list' ? 'grid-cols-1 gap-3' : 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4'}`}>

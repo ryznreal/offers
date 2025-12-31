@@ -10,7 +10,7 @@ import { MarketingPortal } from './views/MarketingPortal';
 import { Login } from './views/Login';
 import { Property, PropertyType, FilterState, Status, User, UserRole, Project, UnitType, Finishing, UnitAvailability } from './types';
 import { MOCK_PROPERTIES, MOCK_USERS, MOCK_PROJECTS } from './constants';
-import { Plus, Building2, Map, ShieldCheck, Share2 } from './components/Icon';
+import { Plus, Building2, Map, ShieldCheck, Share2, LogOut } from './components/Icon';
 
 // مفاتيح التخزين المحلي
 const STORAGE_KEYS = {
@@ -347,6 +347,13 @@ function App() {
             className="p-2 bg-primary-600 rounded-xl text-white active:scale-90 transition-transform"
           >
             <Plus size={18} />
+          </button>
+          <button 
+            onClick={handleLogout}
+            className="p-2 bg-red-50 rounded-xl text-red-600 active:scale-90 transition-transform"
+            title="تسجيل الخروج"
+          >
+            <LogOut size={18} />
           </button>
         </div>
       </div>
