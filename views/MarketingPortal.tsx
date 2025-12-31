@@ -54,7 +54,7 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
   const handleUnitClick = (key: string) => {
     if (!selectedProject) return;
 
-    // إذا كان الوضع "تفصيلي" نفتح النافذة المعتادة
+    // الوضع التفصيلي: فتح النافذة المنبثقة
     if (activeTool === 'detail') {
       const currentStatus = selectedProject.unitStatus[key] || UnitAvailability.Available;
       setSelectedUnitKey(key);
@@ -70,7 +70,7 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
       return;
     }
 
-    // --- وضع التحديث السريع ---
+    // وضع التحديث السريع: تغيير الحالة مباشرة بنقرة واحدة
     const updatedProject = { ...selectedProject };
     const targetStatus = activeTool as UnitAvailability;
 
@@ -79,7 +79,6 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
       delete updatedProject.unitBookings[key];
     } else {
       updatedProject.unitStatus[key] = targetStatus;
-      // نحتفظ بالبيانات القديمة إذا وجدت أو نضع وسماً للتحديث السريع
       const existing = selectedProject.unitBookings[key];
       updatedProject.unitBookings[key] = existing || {
         unitKey: key,
@@ -100,12 +99,17 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
     return new Intl.NumberFormat('ar-SA', { style: 'currency', currency: 'SAR', maximumFractionDigits: 0 }).format(price);
   };
 
+  // الألوان المطلوبة: متاح (أخضر)، محجوز (أزرق فاتح)، مباع (أحمر)
   const getStatusColor = (status: UnitAvailability | undefined) => {
     switch(status) {
-      case UnitAvailability.Available: return 'bg-white border-gray-100 text-gray-300 hover:bg-primary-50';
-      case UnitAvailability.Reserved: return 'bg-orange-500 border-transparent text-white shadow-lg scale-105';
-      case UnitAvailability.Sold: return 'bg-red-500 border-transparent text-white shadow-lg scale-105';
-      default: return 'bg-white border-gray-100';
+      case UnitAvailability.Available: 
+        return 'bg-green-600 border-transparent text-white shadow-sm hover:bg-green-700';
+      case UnitAvailability.Reserved: 
+        return 'bg-sky-400 border-transparent text-white shadow-lg scale-105 hover:bg-sky-500';
+      case UnitAvailability.Sold: 
+        return 'bg-red-600 border-transparent text-white shadow-lg scale-105 hover:bg-red-700';
+      default: 
+        return 'bg-gray-100 border-gray-200 text-gray-400';
     }
   };
 
@@ -133,14 +137,14 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
             </div>
           </div>
 
-          {/* Quick Action Toolbar - Only visible when a project is selected */}
+          {/* شريط أدوات التحديث السريع */}
           {selectedProjectId && (
             <div className="bg-white p-2 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-2 animate-in slide-in-from-left-4">
-              <span className="text-[10px] font-black text-gray-400 px-3 uppercase border-l border-gray-100 ml-2">أدوات التحكم:</span>
+              <span className="text-[10px] font-black text-gray-400 px-3 uppercase border-l border-gray-100 ml-2">أدوات التحكم السريع:</span>
               
               <button 
                 onClick={() => setActiveTool('detail')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${activeTool === 'detail' ? 'bg-primary-600 text-white shadow-lg shadow-primary-100' : 'text-gray-500 hover:bg-gray-50'}`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${activeTool === 'detail' ? 'bg-primary-600 text-white shadow-lg' : 'text-gray-500 hover:bg-gray-50'}`}
               >
                 <UserCheck size={14} /> الوضع التفصيلي
               </button>
@@ -148,24 +152,24 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
               <div className="w-px h-6 bg-gray-100 mx-1"></div>
 
               <button 
+                onClick={() => setActiveTool(UnitAvailability.Available)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${activeTool === UnitAvailability.Available ? 'bg-green-600 text-white shadow-lg' : 'text-green-600 hover:bg-green-50'}`}
+              >
+                <CheckCircle size={14} /> إتاحة سريعة
+              </button>
+
+              <button 
                 onClick={() => setActiveTool(UnitAvailability.Reserved)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${activeTool === UnitAvailability.Reserved ? 'bg-orange-500 text-white shadow-lg shadow-orange-100' : 'text-orange-600 hover:bg-orange-50'}`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${activeTool === UnitAvailability.Reserved ? 'bg-sky-500 text-white shadow-lg' : 'text-sky-600 hover:bg-sky-50'}`}
               >
                 <Zap size={14} /> حجز سريع
               </button>
 
               <button 
                 onClick={() => setActiveTool(UnitAvailability.Sold)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${activeTool === UnitAvailability.Sold ? 'bg-red-500 text-white shadow-lg shadow-red-100' : 'text-red-600 hover:bg-red-50'}`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${activeTool === UnitAvailability.Sold ? 'bg-red-600 text-white shadow-lg' : 'text-red-600 hover:bg-red-50'}`}
               >
                 <Zap size={14} /> بيع سريع
-              </button>
-
-              <button 
-                onClick={() => setActiveTool(UnitAvailability.Available)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${activeTool === UnitAvailability.Available ? 'bg-green-600 text-white shadow-lg shadow-green-100' : 'text-green-600 hover:bg-green-50'}`}
-              >
-                <CheckCircle size={14} /> إتاحة سريعة
               </button>
             </div>
           )}
@@ -207,9 +211,9 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
                        <span className="text-[10px] font-black text-green-700 block mb-1">متاح</span>
                        <span className="text-sm font-black text-green-800">{availableCount}</span>
                     </div>
-                    <div className="bg-orange-50 p-3 rounded-2xl text-center">
-                       <span className="text-[10px] font-black text-orange-700 block mb-1">محجوز</span>
-                       <span className="text-sm font-black text-orange-800">{reservedCount}</span>
+                    <div className="bg-sky-50 p-3 rounded-2xl text-center">
+                       <span className="text-[10px] font-black text-sky-700 block mb-1">محجوز</span>
+                       <span className="text-sm font-black text-sky-800">{reservedCount}</span>
                     </div>
                     <div className="bg-red-50 p-3 rounded-2xl text-center">
                        <span className="text-[10px] font-black text-red-700 block mb-1">مباع</span>
@@ -224,9 +228,14 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in duration-500">
              <div className="lg:col-span-8">
                 {activeTool !== 'detail' && (
-                  <div className="mb-4 bg-orange-50 border border-orange-100 p-4 rounded-2xl flex items-center gap-3 animate-bounce">
+                  <div className="mb-4 bg-orange-50 border border-orange-100 p-4 rounded-2xl flex items-center gap-3 animate-pulse">
                     <Zap className="text-orange-600" size={20} />
-                    <span className="text-sm font-black text-orange-800">وضع التحديث السريع نشط: سيتم تغيير حالة أي وحدة تنقر عليها مباشرة إلى {activeTool === UnitAvailability.Reserved ? 'محجوزة' : activeTool === UnitAvailability.Sold ? 'مباعة' : 'متاحة'}</span>
+                    <span className="text-sm font-black text-orange-800">
+                      أداة التحديث السريع نشطة: انقر على أي وحدة لتحويلها إلى {
+                        activeTool === UnitAvailability.Available ? 'متاحة' : 
+                        activeTool === UnitAvailability.Reserved ? 'محجوزة' : 'مباعة'
+                      } فوراً.
+                    </span>
                   </div>
                 )}
                 <div className="bg-gray-100 p-8 rounded-[4rem] border border-gray-200 shadow-inner flex flex-col items-center min-h-[700px] justify-center relative overflow-hidden">
@@ -234,9 +243,9 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
                       
                       {/* Legend Bar */}
                       <div className="flex justify-center gap-6 mb-10 border-b border-gray-50 pb-6">
-                         <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-white border border-gray-200"></div><span className="text-[10px] font-black text-gray-400 uppercase">متاح</span></div>
-                         <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-orange-500"></div><span className="text-[10px] font-black text-gray-400 uppercase">محجوز</span></div>
-                         <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-500"></div><span className="text-[10px] font-black text-gray-400 uppercase">مباع</span></div>
+                         <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-green-600"></div><span className="text-[10px] font-black text-gray-400 uppercase">متاح</span></div>
+                         <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-sky-400"></div><span className="text-[10px] font-black text-gray-400 uppercase">محجوز</span></div>
+                         <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-600"></div><span className="text-[10px] font-black text-gray-400 uppercase">مباع</span></div>
                       </div>
 
                       {/* Annexes */}
@@ -313,7 +322,7 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
                             <div key={booking.unitKey} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-3">
                                <div className="flex justify-between items-center">
                                   <span className="text-[11px] font-black text-gray-900">وحدة {booking.unitNumber}</span>
-                                  <span className={`px-2 py-0.5 rounded-lg text-[8px] font-black uppercase ${booking.type === UnitAvailability.Reserved ? 'bg-orange-100 text-orange-600' : 'bg-red-100 text-red-600'}`}>
+                                  <span className={`px-2 py-0.5 rounded-lg text-[8px] font-black uppercase ${booking.type === UnitAvailability.Reserved ? 'bg-sky-100 text-sky-600' : 'bg-red-100 text-red-600'}`}>
                                      {booking.type === UnitAvailability.Reserved ? 'محجوزة' : 'مباعة'}
                                   </span>
                                </div>
@@ -366,10 +375,10 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
         {showBookingForm && selectedUnitKey && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
              <div className="bg-white w-full max-w-lg rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 text-right" dir="rtl">
-                <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-orange-50/30">
+                <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-sky-50/30">
                    <div>
                       <h3 className="text-xl font-black text-gray-900">حجز وحدة {selectedUnitKey.includes('floor') ? selectedUnitKey.split('-').slice(1).join('') : selectedUnitKey}</h3>
-                      <p className="text-xs font-bold text-orange-600 mt-1 uppercase">إدخال بيانات الحجز التفصيلية</p>
+                      <p className="text-xs font-bold text-sky-600 mt-1 uppercase">إدخال بيانات الحجز التفصيلية</p>
                    </div>
                    <button onClick={() => setShowBookingForm(false)} className="p-2 hover:bg-white rounded-full transition-colors text-gray-400">
                       <XCircle size={24} />
@@ -432,10 +441,10 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
                 }} className="p-8 pt-0 space-y-6">
                    
                    <div className="grid grid-cols-3 gap-3">
-                      <button type="button" onClick={() => setBookingType(UnitAvailability.Available)} className={`p-4 rounded-2xl border-2 transition-all font-black text-xs flex flex-col items-center gap-2 ${bookingType === UnitAvailability.Available ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-gray-50 bg-gray-50 text-gray-400'}`}>
+                      <button type="button" onClick={() => setBookingType(UnitAvailability.Available)} className={`p-4 rounded-2xl border-2 transition-all font-black text-xs flex flex-col items-center gap-2 ${bookingType === UnitAvailability.Available ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-50 bg-gray-50 text-gray-400'}`}>
                          <CheckCircle size={20} /> متاحة
                       </button>
-                      <button type="button" onClick={() => setBookingType(UnitAvailability.Reserved)} className={`p-4 rounded-2xl border-2 transition-all font-black text-xs flex flex-col items-center gap-2 ${bookingType === UnitAvailability.Reserved ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-gray-50 bg-gray-50 text-gray-400'}`}>
+                      <button type="button" onClick={() => setBookingType(UnitAvailability.Reserved)} className={`p-4 rounded-2xl border-2 transition-all font-black text-xs flex flex-col items-center gap-2 ${bookingType === UnitAvailability.Reserved ? 'border-sky-500 bg-sky-50 text-sky-700' : 'border-gray-50 bg-gray-50 text-gray-400'}`}>
                          <Users size={20} /> حجز
                       </button>
                       <button type="button" onClick={() => setBookingType(UnitAvailability.Sold)} className={`p-4 rounded-2xl border-2 transition-all font-black text-xs flex flex-col items-center gap-2 ${bookingType === UnitAvailability.Sold ? 'border-red-500 bg-red-50 text-red-700' : 'border-gray-50 bg-gray-50 text-gray-400'}`}>
@@ -448,22 +457,22 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
                         <div className="space-y-4">
                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">بيانات المسوق</label>
                            <div className="grid grid-cols-2 gap-4">
-                              <input required type="text" placeholder="اسم المسوق" className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-bold text-sm outline-none focus:ring-2 focus:ring-orange-500 text-right" value={bookingData.marketerName} onChange={e => setBookingData({...bookingData, marketerName: e.target.value})} />
-                              <input required type="tel" placeholder="رقم الجوال" className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-bold text-sm outline-none focus:ring-2 focus:ring-orange-500 text-right" value={bookingData.marketerPhone} onChange={e => setBookingData({...bookingData, marketerPhone: e.target.value})} />
+                              <input required type="text" placeholder="اسم المسوق" className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-bold text-sm outline-none focus:ring-2 focus:ring-sky-500 text-right" value={bookingData.marketerName} onChange={e => setBookingData({...bookingData, marketerName: e.target.value})} />
+                              <input required type="tel" placeholder="رقم الجوال" className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-bold text-sm outline-none focus:ring-2 focus:ring-sky-500 text-right" value={bookingData.marketerPhone} onChange={e => setBookingData({...bookingData, marketerPhone: e.target.value})} />
                            </div>
                         </div>
                         <div className="space-y-4">
                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">بيانات العميل</label>
                            <div className="grid grid-cols-2 gap-4">
-                              <input required type="text" placeholder="اسم العميل" className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-bold text-sm outline-none focus:ring-2 focus:ring-orange-500 text-right" value={bookingData.customerName} onChange={e => setBookingData({...bookingData, customerName: e.target.value})} />
-                              <input required type="tel" placeholder="رقم الجوال" className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-bold text-sm outline-none focus:ring-2 focus:ring-orange-500 text-right" value={bookingData.customerPhone} onChange={e => setBookingData({...bookingData, customerPhone: e.target.value})} />
+                              <input required type="text" placeholder="اسم العميل" className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-bold text-sm outline-none focus:ring-2 focus:ring-sky-500 text-right" value={bookingData.customerName} onChange={e => setBookingData({...bookingData, customerName: e.target.value})} />
+                              <input required type="tel" placeholder="رقم الجوال" className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-bold text-sm outline-none focus:ring-2 focus:ring-sky-500 text-right" value={bookingData.customerPhone} onChange={e => setBookingData({...bookingData, customerPhone: e.target.value})} />
                            </div>
                         </div>
                      </div>
                    )}
 
                    <div className="pt-6 flex gap-3">
-                      <button type="submit" className="flex-1 bg-orange-600 text-white py-4 rounded-3xl font-black shadow-xl shadow-orange-100 hover:bg-orange-700 transition-all">
+                      <button type="submit" className="flex-1 bg-sky-600 text-white py-4 rounded-3xl font-black shadow-xl shadow-sky-100 hover:bg-sky-700 transition-all">
                          حفظ البيانات
                       </button>
                       <button type="button" onClick={() => setShowBookingForm(false)} className="px-8 py-4 rounded-3xl border border-gray-100 font-bold text-gray-400 hover:bg-gray-50">إلغاء</button>
