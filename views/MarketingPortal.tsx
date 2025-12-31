@@ -21,7 +21,8 @@ import {
   Ruler,
   Bed,
   Bath,
-  Zap
+  Zap,
+  MoreVertical
 } from '../components/Icon';
 
 interface MarketingPortalProps {
@@ -30,12 +31,14 @@ interface MarketingPortalProps {
   onBack: () => void;
 }
 
+type QuickActionTool = 'detail' | UnitAvailability;
+
 export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUpdateProject, onBack }) => {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [selectedUnitKey, setSelectedUnitKey] = useState<string | null>(null);
   const [showBookingForm, setShowBookingForm] = useState(false);
+  const [activeTool, setActiveTool] = useState<QuickActionTool>('detail');
   const [bookingType, setBookingType] = useState<UnitAvailability>(UnitAvailability.Available);
-  const [isQuickMode, setIsQuickMode] = useState(true); // الوضع السريع افتراضي
   
   const [bookingData, setBookingData] = useState<Partial<BookingDetails>>({
     marketerName: '',
@@ -49,71 +52,48 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
   const selectedModel = selectedProject?.models.find(m => m.id === selectedUnitModelId);
 
   const handleUnitClick = (key: string) => {
-    const currentStatus = selectedProject?.unitStatus[key] || UnitAvailability.Available;
-    setSelectedUnitKey(key);
-    
-    // إذا كانت الوحدة محجوزة أو مباعة مسبقاً، نظهر البيانات الحالية ونقترح الوضع التفصيلي
-    if (currentStatus !== UnitAvailability.Available) {
-       setBookingType(currentStatus);
-       const existing = selectedProject?.unitBookings[key];
-       if (existing) {
-         setBookingData(existing);
-         setIsQuickMode(false);
-       } else {
-         setBookingData({ marketerName: '', marketerPhone: '', customerName: '', customerPhone: '' });
-         setIsQuickMode(true);
-       }
-    } else {
-       setBookingType(UnitAvailability.Available);
-       setBookingData({ marketerName: '', marketerPhone: '', customerName: '', customerPhone: '' });
-       setIsQuickMode(true);
+    if (!selectedProject) return;
+
+    // إذا كان الوضع "تفصيلي" نفتح النافذة المعتادة
+    if (activeTool === 'detail') {
+      const currentStatus = selectedProject.unitStatus[key] || UnitAvailability.Available;
+      setSelectedUnitKey(key);
+      setBookingType(currentStatus);
+      
+      const existing = selectedProject.unitBookings[key];
+      if (existing) {
+        setBookingData(existing);
+      } else {
+        setBookingData({ marketerName: '', marketerPhone: '', customerName: '', customerPhone: '' });
+      }
+      setShowBookingForm(true);
+      return;
     }
-    setShowBookingForm(true);
-  };
 
-  const handleSaveBooking = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedProject || !selectedUnitKey) return;
-
+    // --- وضع التحديث السريع ---
     const updatedProject = { ...selectedProject };
-    
-    if (bookingType === UnitAvailability.Available) {
-       updatedProject.unitStatus[selectedUnitKey] = UnitAvailability.Available;
-       delete updatedProject.unitBookings[selectedUnitKey];
+    const targetStatus = activeTool as UnitAvailability;
+
+    if (targetStatus === UnitAvailability.Available) {
+      updatedProject.unitStatus[key] = UnitAvailability.Available;
+      delete updatedProject.unitBookings[key];
     } else {
-       updatedProject.unitStatus[selectedUnitKey] = bookingType;
-       
-       // في الوضع السريع نقوم بتصفير البيانات أو الاحتفاظ بالقديمة إذا وجدت
-       if (isQuickMode) {
-          // إذا كان هناك حجز قديم، نحتفظ به أو ننشئ هيكل فارغ
-          const existing = selectedProject.unitBookings[selectedUnitKey];
-          updatedProject.unitBookings[selectedUnitKey] = existing || {
-            unitKey: selectedUnitKey,
-            unitNumber: selectedUnitKey.includes('floor') ? selectedUnitKey.split('-').slice(1).join('') : selectedUnitKey,
-            marketerName: 'تحديث سريع',
-            marketerPhone: '-',
-            customerName: 'تحديث سريع',
-            customerPhone: '-',
-            type: bookingType,
-            timestamp: new Date().toISOString()
-          };
-       } else {
-          updatedProject.unitBookings[selectedUnitKey] = {
-            unitKey: selectedUnitKey,
-            unitNumber: selectedUnitKey.includes('floor') ? selectedUnitKey.split('-').slice(1).join('') : selectedUnitKey,
-            marketerName: bookingData.marketerName || '',
-            marketerPhone: bookingData.marketerPhone || '',
-            customerName: bookingData.customerName || '',
-            customerPhone: bookingData.customerPhone || '',
-            type: bookingType,
-            timestamp: new Date().toISOString()
-          };
-       }
+      updatedProject.unitStatus[key] = targetStatus;
+      // نحتفظ بالبيانات القديمة إذا وجدت أو نضع وسماً للتحديث السريع
+      const existing = selectedProject.unitBookings[key];
+      updatedProject.unitBookings[key] = existing || {
+        unitKey: key,
+        unitNumber: key.includes('floor') ? key.split('-').slice(1).join('') : key,
+        marketerName: 'تحديث سريع',
+        marketerPhone: '-',
+        customerName: 'تحديث سريع',
+        customerPhone: '-',
+        type: targetStatus,
+        timestamp: new Date().toISOString()
+      };
     }
 
     onUpdateProject(updatedProject);
-    setShowBookingForm(false);
-    setSelectedUnitKey(null);
   };
 
   const formatPrice = (price: number) => {
@@ -152,6 +132,43 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
               </p>
             </div>
           </div>
+
+          {/* Quick Action Toolbar - Only visible when a project is selected */}
+          {selectedProjectId && (
+            <div className="bg-white p-2 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-2 animate-in slide-in-from-left-4">
+              <span className="text-[10px] font-black text-gray-400 px-3 uppercase border-l border-gray-100 ml-2">أدوات التحكم:</span>
+              
+              <button 
+                onClick={() => setActiveTool('detail')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${activeTool === 'detail' ? 'bg-primary-600 text-white shadow-lg shadow-primary-100' : 'text-gray-500 hover:bg-gray-50'}`}
+              >
+                <UserCheck size={14} /> الوضع التفصيلي
+              </button>
+
+              <div className="w-px h-6 bg-gray-100 mx-1"></div>
+
+              <button 
+                onClick={() => setActiveTool(UnitAvailability.Reserved)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${activeTool === UnitAvailability.Reserved ? 'bg-orange-500 text-white shadow-lg shadow-orange-100' : 'text-orange-600 hover:bg-orange-50'}`}
+              >
+                <Zap size={14} /> حجز سريع
+              </button>
+
+              <button 
+                onClick={() => setActiveTool(UnitAvailability.Sold)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${activeTool === UnitAvailability.Sold ? 'bg-red-500 text-white shadow-lg shadow-red-100' : 'text-red-600 hover:bg-red-50'}`}
+              >
+                <Zap size={14} /> بيع سريع
+              </button>
+
+              <button 
+                onClick={() => setActiveTool(UnitAvailability.Available)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${activeTool === UnitAvailability.Available ? 'bg-green-600 text-white shadow-lg shadow-green-100' : 'text-green-600 hover:bg-green-50'}`}
+              >
+                <CheckCircle size={14} /> إتاحة سريعة
+              </button>
+            </div>
+          )}
         </div>
 
         {!selectedProjectId ? (
@@ -206,6 +223,12 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in duration-500">
              <div className="lg:col-span-8">
+                {activeTool !== 'detail' && (
+                  <div className="mb-4 bg-orange-50 border border-orange-100 p-4 rounded-2xl flex items-center gap-3 animate-bounce">
+                    <Zap className="text-orange-600" size={20} />
+                    <span className="text-sm font-black text-orange-800">وضع التحديث السريع نشط: سيتم تغيير حالة أي وحدة تنقر عليها مباشرة إلى {activeTool === UnitAvailability.Reserved ? 'محجوزة' : activeTool === UnitAvailability.Sold ? 'مباعة' : 'متاحة'}</span>
+                  </div>
+                )}
                 <div className="bg-gray-100 p-8 rounded-[4rem] border border-gray-200 shadow-inner flex flex-col items-center min-h-[700px] justify-center relative overflow-hidden">
                    <div className="bg-white p-12 rounded-[3.5rem] shadow-2xl border-b-[20px] border-gray-400 relative w-full max-w-2xl">
                       
@@ -339,14 +362,14 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
           </div>
         )}
 
-        {/* Booking Form Modal */}
+        {/* Booking Form Modal - Used only in 'detail' mode */}
         {showBookingForm && selectedUnitKey && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
              <div className="bg-white w-full max-w-lg rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 text-right" dir="rtl">
                 <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-orange-50/30">
                    <div>
-                      <h3 className="text-xl font-black text-gray-900">تحديث وحدة {selectedUnitKey.includes('floor') ? selectedUnitKey.split('-').slice(1).join('') : selectedUnitKey}</h3>
-                      <p className="text-xs font-bold text-orange-600 mt-1 uppercase">إدارة حالات الحجز والمبيعات</p>
+                      <h3 className="text-xl font-black text-gray-900">حجز وحدة {selectedUnitKey.includes('floor') ? selectedUnitKey.split('-').slice(1).join('') : selectedUnitKey}</h3>
+                      <p className="text-xs font-bold text-orange-600 mt-1 uppercase">إدخال بيانات الحجز التفصيلية</p>
                    </div>
                    <button onClick={() => setShowBookingForm(false)} className="p-2 hover:bg-white rounded-full transition-colors text-gray-400">
                       <XCircle size={24} />
@@ -354,24 +377,6 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
                 </div>
 
                 <div className="px-8 pt-6">
-                   {/* Mode Selector Toggle */}
-                   <div className="flex bg-gray-100 p-1 rounded-2xl mb-6 shadow-inner">
-                      <button 
-                         type="button"
-                         onClick={() => setIsQuickMode(true)}
-                         className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-black text-xs transition-all ${isQuickMode ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-400'}`}
-                      >
-                         <Zap size={14} /> تحديث سريع
-                      </button>
-                      <button 
-                         type="button"
-                         onClick={() => setIsQuickMode(false)}
-                         className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-black text-xs transition-all ${!isQuickMode ? 'bg-white text-primary-600 shadow-sm' : 'text-gray-400'}`}
-                      >
-                         <UserCheck size={14} /> إضافة بيانات
-                      </button>
-                   </div>
-
                    {/* UNIT SPECS CARD */}
                    {selectedModel && (
                      <div className="bg-gray-50 border border-gray-100 p-5 rounded-[2rem] grid grid-cols-3 gap-4 mb-6 relative overflow-hidden">
@@ -401,7 +406,31 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
                    )}
                 </div>
 
-                <form onSubmit={handleSaveBooking} className="p-8 pt-0 space-y-6">
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!selectedProject || !selectedUnitKey) return;
+                  const updatedProject = { ...selectedProject };
+                  
+                  if (bookingType === UnitAvailability.Available) {
+                    updatedProject.unitStatus[selectedUnitKey] = UnitAvailability.Available;
+                    delete updatedProject.unitBookings[selectedUnitKey];
+                  } else {
+                    updatedProject.unitStatus[selectedUnitKey] = bookingType;
+                    updatedProject.unitBookings[selectedUnitKey] = {
+                      unitKey: selectedUnitKey,
+                      unitNumber: selectedUnitKey.includes('floor') ? selectedUnitKey.split('-').slice(1).join('') : selectedUnitKey,
+                      marketerName: bookingData.marketerName || '',
+                      marketerPhone: bookingData.marketerPhone || '',
+                      customerName: bookingData.customerName || '',
+                      customerPhone: bookingData.customerPhone || '',
+                      type: bookingType,
+                      timestamp: new Date().toISOString()
+                    };
+                  }
+                  onUpdateProject(updatedProject);
+                  setShowBookingForm(false);
+                }} className="p-8 pt-0 space-y-6">
+                   
                    <div className="grid grid-cols-3 gap-3">
                       <button type="button" onClick={() => setBookingType(UnitAvailability.Available)} className={`p-4 rounded-2xl border-2 transition-all font-black text-xs flex flex-col items-center gap-2 ${bookingType === UnitAvailability.Available ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-gray-50 bg-gray-50 text-gray-400'}`}>
                          <CheckCircle size={20} /> متاحة
@@ -414,7 +443,7 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
                       </button>
                    </div>
 
-                   {(!isQuickMode && bookingType !== UnitAvailability.Available) && (
+                   {bookingType !== UnitAvailability.Available && (
                      <div className="space-y-6 animate-in slide-in-from-bottom-2">
                         <div className="space-y-4">
                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">بيانات المسوق</label>
@@ -433,17 +462,9 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
                      </div>
                    )}
 
-                   {isQuickMode && bookingType !== UnitAvailability.Available && (
-                     <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100 text-center animate-in fade-in">
-                        <p className="text-[11px] font-black text-orange-700 flex items-center justify-center gap-2">
-                           <Zap size={14} /> سيتم تحديث حالة الوحدة فوراً دون تغيير بيانات الحجز الحالية.
-                        </p>
-                     </div>
-                   )}
-
                    <div className="pt-6 flex gap-3">
                       <button type="submit" className="flex-1 bg-orange-600 text-white py-4 rounded-3xl font-black shadow-xl shadow-orange-100 hover:bg-orange-700 transition-all">
-                         حفظ التغييرات
+                         حفظ البيانات
                       </button>
                       <button type="button" onClick={() => setShowBookingForm(false)} className="px-8 py-4 rounded-3xl border border-gray-100 font-bold text-gray-400 hover:bg-gray-50">إلغاء</button>
                    </div>
