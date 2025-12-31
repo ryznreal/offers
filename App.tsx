@@ -11,13 +11,34 @@ import { Property, PropertyType, FilterState, Status, User, UserRole, Project, U
 import { MOCK_PROPERTIES, MOCK_USERS, MOCK_PROJECTS } from './constants';
 import { Plus, Building2, Map, ShieldCheck, Share2 } from './components/Icon';
 
+// مفاتيح التخزين المحلي
+const STORAGE_KEYS = {
+  PROPERTIES: 'realestate_base_properties',
+  PROJECTS: 'realestate_projects',
+  USERS: 'realestate_users'
+};
+
 function App() {
   const [view, setView] = useState<string>('list'); 
-  const [baseProperties, setBaseProperties] = useState<Property[]>(MOCK_PROPERTIES);
-  const [projects, setProjects] = useState<Project[]>(MOCK_PROJECTS);
+
+  // تحميل البيانات من LocalStorage أو استخدام Mock البيانات كخيار احتياطي
+  const [baseProperties, setBaseProperties] = useState<Property[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.PROPERTIES);
+    return saved ? JSON.parse(saved) : MOCK_PROPERTIES;
+  });
+
+  const [projects, setProjects] = useState<Project[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.PROJECTS);
+    return saved ? JSON.parse(saved) : MOCK_PROJECTS;
+  });
+
+  const [users, setUsers] = useState<User[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.USERS);
+    return saved ? JSON.parse(saved) : MOCK_USERS;
+  });
+
   const [properties, setProperties] = useState<Property[]>([]);
-  const [users, setUsers] = useState<User[]>(MOCK_USERS);
-  const [currentUser, setCurrentUser] = useState<User>(MOCK_USERS[1]); 
+  const [currentUser, setCurrentUser] = useState<User>(users[1] || MOCK_USERS[1]); 
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
@@ -35,6 +56,19 @@ function App() {
     isCorner: 'All',
     investmentAllowed: 'All'
   });
+
+  // مزامنة البيانات مع التخزين المحلي عند أي تغيير
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(baseProperties));
+  }, [baseProperties]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(projects));
+  }, [projects]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+  }, [users]);
 
   const refreshDisplayProperties = useCallback(() => {
     const projectGeneratedProperties: Property[] = [];
@@ -84,19 +118,19 @@ function App() {
   }, [refreshDisplayProperties]);
 
   const handleSaveProject = (project: Project) => {
-    const existingIndex = projects.findIndex(p => p.id === project.id);
-    let updatedProjects;
-    if (existingIndex >= 0) {
-      updatedProjects = [...projects];
-      updatedProjects[existingIndex] = project;
-    } else {
-      updatedProjects = [project, ...projects];
-    }
-    setProjects(updatedProjects);
+    setProjects(prev => {
+      const existingIndex = prev.findIndex(p => p.id === project.id);
+      if (existingIndex >= 0) {
+        const updated = [...prev];
+        updated[existingIndex] = project;
+        return updated;
+      }
+      return [project, ...prev];
+    });
   };
 
   const handleSaveProperty = (newProperty: Property) => {
-    setBaseProperties([newProperty, ...baseProperties]);
+    setBaseProperties(prev => [newProperty, ...prev]);
     setView('list');
   };
 
