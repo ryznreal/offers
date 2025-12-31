@@ -16,10 +16,10 @@ export const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
     e.preventDefault();
     setError('');
 
-    // تنظيف البيانات المدخلة: إزالة المسافات وتحويل اسم المستخدم للحروف الصغيرة
+    // تنظيف البيانات المدخلة
     const normalizedUsername = username.trim().toLowerCase();
 
-    // البحث عن المستخدم بالاسم أو البريد الإلكتروني فقط (بدون كلمة مرور للمراجعة)
+    // البحث عن المستخدم (الدخول بالاسم فقط للمراجعة)
     const user = users.find(u => 
       (u.name.toLowerCase() === normalizedUsername || u.email.toLowerCase() === normalizedUsername)
     );
@@ -27,41 +27,39 @@ export const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
     if (user) {
       onLogin(user);
     } else {
-      setError('اسم المستخدم غير موجود في النظام');
+      setError('اسم المستخدم غير موجود (استخدم admin)');
     }
   };
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 text-right font-sans" dir="rtl">
       <div className="max-w-md w-full animate-in fade-in zoom-in duration-500">
-        {/* Logo & Header */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-24 h-24 bg-primary-600 text-white rounded-[2.5rem] shadow-2xl shadow-primary-100 mb-6 border-4 border-white">
             <Building2 size={48} />
           </div>
           <h1 className="text-3xl font-black text-gray-900">نظام الوسيط العقاري</h1>
-          <p className="text-gray-400 font-bold mt-2 uppercase tracking-widest text-[10px]">Review Mode - Password Disabled</p>
+          <p className="text-gray-400 font-bold mt-2 uppercase tracking-widest text-[10px]">Review Mode - Login as 'admin'</p>
         </div>
 
-        {/* Login Card */}
         <div className="bg-white p-10 rounded-[3rem] shadow-2xl shadow-slate-200 border border-white">
           <div className="flex items-center gap-3 mb-8">
             <div className="p-2 bg-primary-50 text-primary-600 rounded-lg">
               <UserCheck size={20} />
             </div>
-            <h2 className="text-xl font-black text-gray-800">تسجيل دخول سريع</h2>
+            <h2 className="text-xl font-black text-gray-800">تسجيل الدخول</h2>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-4">
               <div className="relative">
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 mr-1">اسم المستخدم (مثال: admin)</label>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 mr-1">اسم المستخدم</label>
                 <div className="relative group">
                   <Users className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-primary-500 transition-colors" size={18} />
                   <input 
                     type="text" 
                     required 
-                    placeholder="ادخل اسم المستخدم هنا..."
+                    placeholder="admin"
                     autoCapitalize="none"
                     autoCorrect="off"
                     autoComplete="username"
@@ -91,14 +89,10 @@ export const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
 
           <div className="mt-8 text-center">
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed">
-              وضع المراجعة نشط حالياً<br/>يمكنك الدخول باستخدام كلمة: admin
+              يرجى استخدام اسم المستخدم: <span className="text-primary-600 font-black">admin</span>
             </p>
           </div>
         </div>
-
-        <p className="text-center mt-8 text-[10px] font-bold text-gray-300 uppercase tracking-widest">
-          © {new Date().getFullYear()} شركة الوسيط العقاري
-        </p>
       </div>
     </div>
   );

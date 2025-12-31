@@ -67,7 +67,6 @@ const generateMockProperties = (): Property[] => {
 
 export const MOCK_PROPERTIES: Property[] = generateMockProperties();
 
-// Define 4 Rich Mock Projects
 export const MOCK_PROJECTS: Project[] = [
   {
     id: 'proj-1',
@@ -107,69 +106,6 @@ export const MOCK_PROJECTS: Project[] = [
       }
     },
     createdAt: new Date().toISOString()
-  },
-  {
-    id: 'proj-2',
-    name: 'مجمع واحة النرجس السكني',
-    developer: 'مجموعة الراجحي الاستثمارية',
-    city: 'الرياض',
-    district: 'النرجس',
-    googleMapUrl: 'https://maps.google.com/?q=24.8336,46.6553',
-    status: Status.UnderConstruction,
-    floorsCount: 4,
-    unitsPerFloor: 3,
-    annexCount: 1,
-    basementCount: 0,
-    models: [
-      { id: 'm3', name: 'نموذج العائلة (الياقوت)', color: 'bg-purple-600', area: 175, price: 920000, rooms: 4, bathrooms: 3, halls: 1, finishing: Finishing.Medium, features: ['حديقة خلفية بالارضي', 'مطبخ راكب'] },
-      { id: 'm4', name: 'نموذج اللؤلؤ (مباع بالكامل)', color: 'bg-rose-500', area: 130, price: 750000, rooms: 3, bathrooms: 2, halls: 1, finishing: Finishing.Medium, features: ['تصميم مودرن'] }
-    ],
-    unitMapping: {
-      'floor-1-1': 'm3', 'floor-1-2': 'm3', 'floor-1-3': 'm4',
-      'floor-2-1': 'm3', 'floor-2-2': 'm4', 'floor-2-3': 'm4',
-      'floor-3-1': 'm3', 'floor-3-2': 'm4', 'floor-3-3': 'm4',
-      'annex-1': 'm3'
-    },
-    unitStatus: {
-      'floor-1-1': UnitAvailability.Available,
-      'floor-1-2': UnitAvailability.Available,
-      'floor-1-3': UnitAvailability.Sold, 
-      'floor-2-2': UnitAvailability.Sold, 
-      'floor-2-3': UnitAvailability.Sold,
-      'floor-3-2': UnitAvailability.Sold,
-      'floor-3-3': UnitAvailability.Sold
-    },
-    unitBookings: {},
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: 'proj-3',
-    name: 'إطلالة البحر الفاخرة',
-    developer: 'ماجد الفطيم للمشاريع',
-    city: 'جدة',
-    district: 'الشاطئ',
-    googleMapUrl: 'https://maps.google.com/?q=21.6136,39.1153',
-    status: Status.UnderFinishing,
-    floorsCount: 8,
-    unitsPerFloor: 2,
-    annexCount: 1,
-    basementCount: 2,
-    models: [
-      { id: 'm5', name: 'سكاي لاين بريميوم', color: 'bg-amber-600', area: 140, price: 2200000, rooms: 3, bathrooms: 3, halls: 1, finishing: Finishing.Luxury, features: ['إطلالة بحرية بانورامية', 'تجهيزات أوروبية'] }
-    ],
-    unitMapping: { 
-      'floor-1-1': 'm5', 'floor-1-2': 'm5', 
-      'floor-2-1': 'm5', 'floor-2-2': 'm5',
-      'floor-3-1': 'm5', 'floor-3-2': 'm5',
-      'annex-1': 'm5' 
-    },
-    unitStatus: { 
-      'floor-1-1': UnitAvailability.Available, 
-      'floor-2-1': UnitAvailability.Reserved,
-      'annex-1': UnitAvailability.Available 
-    },
-    unitBookings: {},
-    createdAt: new Date().toISOString()
   }
 ];
 
@@ -178,22 +114,11 @@ export const MOCK_USERS: User[] = [
     id: 'U1',
     name: 'admin',
     email: 'admin@alwaseet.com',
-    password: '1234', // كلمة مرور مدير البرنامج المطلوبة
+    password: '1234', 
     role: UserRole.Admin,
     lastLogin: new Date().toISOString(),
     permissions: {
       canAdd: true, canEdit: true, canDelete: true, canExport: true, canManageUsers: true
-    }
-  },
-  {
-    id: 'U3',
-    name: 'منصور مدير التسويق',
-    email: 'mansour@developer.com',
-    password: 'password',
-    role: UserRole.Marketing,
-    lastLogin: '2024-03-20T09:00:00Z',
-    permissions: {
-      canAdd: false, canEdit: true, canDelete: false, canExport: true, canManageUsers: false
     }
   },
   {
@@ -202,7 +127,7 @@ export const MOCK_USERS: User[] = [
     email: 'sara@alwaseet.com',
     password: 'password',
     role: UserRole.Agent,
-    lastLogin: '2024-03-19T14:30:00Z',
+    lastLogin: new Date().toISOString(),
     permissions: {
       canAdd: true, canEdit: true, canDelete: false, canExport: true, canManageUsers: false
     }
