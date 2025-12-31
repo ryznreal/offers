@@ -20,7 +20,8 @@ import {
   ChevronDown,
   Ruler,
   Bed,
-  Bath
+  Bath,
+  Zap
 } from '../components/Icon';
 
 interface MarketingPortalProps {
@@ -34,6 +35,7 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
   const [selectedUnitKey, setSelectedUnitKey] = useState<string | null>(null);
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [bookingType, setBookingType] = useState<UnitAvailability>(UnitAvailability.Available);
+  const [isQuickMode, setIsQuickMode] = useState(true); // الوضع السريع افتراضي
   
   const [bookingData, setBookingData] = useState<Partial<BookingDetails>>({
     marketerName: '',
@@ -50,14 +52,21 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
     const currentStatus = selectedProject?.unitStatus[key] || UnitAvailability.Available;
     setSelectedUnitKey(key);
     
+    // إذا كانت الوحدة محجوزة أو مباعة مسبقاً، نظهر البيانات الحالية ونقترح الوضع التفصيلي
     if (currentStatus !== UnitAvailability.Available) {
        setBookingType(currentStatus);
        const existing = selectedProject?.unitBookings[key];
-       if (existing) setBookingData(existing);
-       else setBookingData({ marketerName: '', marketerPhone: '', customerName: '', customerPhone: '' });
+       if (existing) {
+         setBookingData(existing);
+         setIsQuickMode(false);
+       } else {
+         setBookingData({ marketerName: '', marketerPhone: '', customerName: '', customerPhone: '' });
+         setIsQuickMode(true);
+       }
     } else {
        setBookingType(UnitAvailability.Available);
        setBookingData({ marketerName: '', marketerPhone: '', customerName: '', customerPhone: '' });
+       setIsQuickMode(true);
     }
     setShowBookingForm(true);
   };
@@ -73,16 +82,33 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
        delete updatedProject.unitBookings[selectedUnitKey];
     } else {
        updatedProject.unitStatus[selectedUnitKey] = bookingType;
-       updatedProject.unitBookings[selectedUnitKey] = {
-         unitKey: selectedUnitKey,
-         unitNumber: selectedUnitKey.includes('floor') ? selectedUnitKey.split('-').slice(1).join('') : selectedUnitKey,
-         marketerName: bookingData.marketerName || '',
-         marketerPhone: bookingData.marketerPhone || '',
-         customerName: bookingData.customerName || '',
-         customerPhone: bookingData.customerPhone || '',
-         type: bookingType,
-         timestamp: new Date().toISOString()
-       };
+       
+       // في الوضع السريع نقوم بتصفير البيانات أو الاحتفاظ بالقديمة إذا وجدت
+       if (isQuickMode) {
+          // إذا كان هناك حجز قديم، نحتفظ به أو ننشئ هيكل فارغ
+          const existing = selectedProject.unitBookings[selectedUnitKey];
+          updatedProject.unitBookings[selectedUnitKey] = existing || {
+            unitKey: selectedUnitKey,
+            unitNumber: selectedUnitKey.includes('floor') ? selectedUnitKey.split('-').slice(1).join('') : selectedUnitKey,
+            marketerName: 'تحديث سريع',
+            marketerPhone: '-',
+            customerName: 'تحديث سريع',
+            customerPhone: '-',
+            type: bookingType,
+            timestamp: new Date().toISOString()
+          };
+       } else {
+          updatedProject.unitBookings[selectedUnitKey] = {
+            unitKey: selectedUnitKey,
+            unitNumber: selectedUnitKey.includes('floor') ? selectedUnitKey.split('-').slice(1).join('') : selectedUnitKey,
+            marketerName: bookingData.marketerName || '',
+            marketerPhone: bookingData.marketerPhone || '',
+            customerName: bookingData.customerName || '',
+            customerPhone: bookingData.customerPhone || '',
+            type: bookingType,
+            timestamp: new Date().toISOString()
+          };
+       }
     }
 
     onUpdateProject(updatedProject);
@@ -319,8 +345,8 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
              <div className="bg-white w-full max-w-lg rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 text-right" dir="rtl">
                 <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-orange-50/30">
                    <div>
-                      <h3 className="text-xl font-black text-gray-900">تحديث حالة الوحدة {selectedUnitKey}</h3>
-                      <p className="text-xs font-bold text-orange-600 mt-1 uppercase">إدارة المخزون والبيانات</p>
+                      <h3 className="text-xl font-black text-gray-900">تحديث وحدة {selectedUnitKey.includes('floor') ? selectedUnitKey.split('-').slice(1).join('') : selectedUnitKey}</h3>
+                      <p className="text-xs font-bold text-orange-600 mt-1 uppercase">إدارة حالات الحجز والمبيعات</p>
                    </div>
                    <button onClick={() => setShowBookingForm(false)} className="p-2 hover:bg-white rounded-full transition-colors text-gray-400">
                       <XCircle size={24} />
@@ -328,7 +354,25 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
                 </div>
 
                 <div className="px-8 pt-6">
-                   {/* UNIT SPECS CARD (ALWAYS SHOWN) */}
+                   {/* Mode Selector Toggle */}
+                   <div className="flex bg-gray-100 p-1 rounded-2xl mb-6 shadow-inner">
+                      <button 
+                         type="button"
+                         onClick={() => setIsQuickMode(true)}
+                         className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-black text-xs transition-all ${isQuickMode ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-400'}`}
+                      >
+                         <Zap size={14} /> تحديث سريع
+                      </button>
+                      <button 
+                         type="button"
+                         onClick={() => setIsQuickMode(false)}
+                         className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-black text-xs transition-all ${!isQuickMode ? 'bg-white text-primary-600 shadow-sm' : 'text-gray-400'}`}
+                      >
+                         <UserCheck size={14} /> إضافة بيانات
+                      </button>
+                   </div>
+
+                   {/* UNIT SPECS CARD */}
                    {selectedModel && (
                      <div className="bg-gray-50 border border-gray-100 p-5 rounded-[2rem] grid grid-cols-3 gap-4 mb-6 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-1.5 h-full bg-primary-600"></div>
@@ -370,7 +414,7 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
                       </button>
                    </div>
 
-                   {bookingType !== UnitAvailability.Available && (
+                   {(!isQuickMode && bookingType !== UnitAvailability.Available) && (
                      <div className="space-y-6 animate-in slide-in-from-bottom-2">
                         <div className="space-y-4">
                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">بيانات المسوق</label>
@@ -386,6 +430,14 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
                               <input required type="tel" placeholder="رقم الجوال" className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-bold text-sm outline-none focus:ring-2 focus:ring-orange-500 text-right" value={bookingData.customerPhone} onChange={e => setBookingData({...bookingData, customerPhone: e.target.value})} />
                            </div>
                         </div>
+                     </div>
+                   )}
+
+                   {isQuickMode && bookingType !== UnitAvailability.Available && (
+                     <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100 text-center animate-in fade-in">
+                        <p className="text-[11px] font-black text-orange-700 flex items-center justify-center gap-2">
+                           <Zap size={14} /> سيتم تحديث حالة الوحدة فوراً دون تغيير بيانات الحجز الحالية.
+                        </p>
                      </div>
                    )}
 
