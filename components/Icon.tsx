@@ -54,7 +54,8 @@ import {
   Printer,
   FileBadge,
   Loader,
-  Copy
+  Copy,
+  Percent
 } from 'lucide-react';
 
 export {
@@ -107,5 +108,6 @@ export {
   Printer,
   FileBadge,
   Loader,
-  Copy
+  Copy,
+  Percent
 };
