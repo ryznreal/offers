@@ -15,7 +15,9 @@ import {
   Download,
   Upload,
   FileText,
-  ArrowRight
+  ArrowRight,
+  Eye,
+  EyeOff
 } from '../components/Icon';
 import { parseExcel } from '../utils/excelParser';
 import { downloadTemplate } from '../utils/excelTemplate';
@@ -39,11 +41,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [showFormPassword, setShowFormPassword] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<Partial<User>>({
     name: '',
     email: '',
+    password: '',
     role: UserRole.Agent,
     permissions: {
       canAdd: true,
@@ -94,6 +98,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setEditingUser(user);
     setFormData(user);
     setShowModal(true);
+    setShowFormPassword(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -117,6 +122,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setFormData({
       name: '',
       email: '',
+      password: '',
       role: UserRole.Agent,
       permissions: {
         canAdd: true,
@@ -161,7 +167,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 <ShieldCheck className="text-primary-600" size={36} />
                 إدارة النظام والبيانات
               </h2>
-              <p className="text-gray-500 text-sm font-bold mt-1 uppercase tracking-wider">التحكم في المستخدمين والأدوار الوظيفية</p>
+              <p className="text-gray-500 text-sm font-bold mt-1 uppercase tracking-wider">التحكم في المستخدمين وكلمات المرور</p>
             </div>
           </div>
           <button 
@@ -254,8 +260,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       </td>
                       <td className="px-8 py-6 text-left">
                         <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => handleEdit(user)} className="p-3 text-primary-600 hover:bg-primary-50 rounded-xl transition-colors"><UserCheck size={24} /></button>
-                          <button onClick={() => onDeleteUser(user.id)} className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors"><Trash2 size={24} /></button>
+                          <button onClick={() => handleEdit(user)} title="تعديل المستخدم وكلمة المرور" className="p-3 text-primary-600 hover:bg-primary-50 rounded-xl transition-colors"><UserCheck size={24} /></button>
+                          <button onClick={() => onDeleteUser(user.id)} title="حذف المستخدم" className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors"><Trash2 size={24} /></button>
                         </div>
                       </td>
                     </tr>
@@ -278,14 +284,33 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <form onSubmit={handleSubmit} className="p-10 space-y-10">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="col-span-2">
-                    <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">الاسم الكامل</label>
+                    <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">الاسم الكامل (يستخدم للدخول)</label>
                     <input type="text" required className="w-full px-6 py-4 rounded-2xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-primary-500 outline-none text-base font-bold transition-all shadow-inner" value={formData.name} onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))} />
                   </div>
                   <div>
                     <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">البريد الإلكتروني</label>
                     <input type="email" required className="w-full px-6 py-4 rounded-2xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-primary-500 outline-none text-base font-bold transition-all shadow-inner" value={formData.email} onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))} />
                   </div>
-                  <div>
+                  <div className="relative">
+                    <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">كلمة المرور الجديدة</label>
+                    <div className="relative">
+                      <input 
+                        type={showFormPassword ? "text" : "password"} 
+                        required 
+                        className="w-full px-6 py-4 rounded-2xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-primary-500 outline-none text-base font-bold transition-all shadow-inner" 
+                        value={formData.password} 
+                        onChange={e => setFormData(prev => ({ ...prev, password: e.target.value }))} 
+                      />
+                      <button 
+                        type="button" 
+                        onClick={() => setShowFormPassword(!showFormPassword)} 
+                        className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary-500"
+                      >
+                        {showFormPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="col-span-2">
                     <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">الدور الوظيفي</label>
                     <select className="w-full px-6 py-4 rounded-2xl border-2 border-gray-50 bg-gray-50 focus:bg-white focus:border-primary-500 outline-none text-base font-bold transition-all shadow-inner" value={formData.role} onChange={e => setFormData(prev => ({ ...prev, role: e.target.value as UserRole }))}>
                       {Object.values(UserRole).map(role => <option key={role} value={role}>{role}</option>)}

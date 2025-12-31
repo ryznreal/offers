@@ -56,7 +56,9 @@ import {
   Loader,
   Copy,
   Percent,
-  LogOut
+  LogOut,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 export {
@@ -111,5 +113,7 @@ export {
   Loader,
   Copy,
   Percent,
-  LogOut
+  LogOut,
+  Eye,
+  EyeOff
 };

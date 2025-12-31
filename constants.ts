@@ -99,11 +99,9 @@ export const MOCK_PROJECTS: Project[] = [
       'annex-1': UnitAvailability.Available
     },
     unitBookings: {
-      // Fix: Added missing brokerageFee, marketerPercentage, and isExternalMarketer to satisfy BookingDetails interface
       'floor-1-1': {
         unitKey: 'floor-1-1', unitNumber: '101', marketerName: 'فهد المسوق', marketerPhone: '0500000001', customerName: 'خالد العميل', customerPhone: '0599999991', type: UnitAvailability.Sold, timestamp: new Date().toISOString(), brokerageFee: 25000, marketerPercentage: 2.5, isExternalMarketer: false
       },
-      // Fix: Added missing brokerageFee, marketerPercentage, and isExternalMarketer to satisfy BookingDetails interface
       'floor-2-1': {
         unitKey: 'floor-2-1', unitNumber: '201', marketerName: 'سارة المسوقة', marketerPhone: '0500000002', customerName: 'نورة العميلة', customerPhone: '0599999992', type: UnitAvailability.Reserved, timestamp: new Date().toISOString(), brokerageFee: 15000, marketerPercentage: 1.5, isExternalMarketer: true
       }
@@ -172,42 +170,17 @@ export const MOCK_PROJECTS: Project[] = [
     },
     unitBookings: {},
     createdAt: new Date().toISOString()
-  },
-  {
-    id: 'proj-4',
-    name: 'فلل الياسمين الذكية',
-    developer: 'دار الأركان للتطوير',
-    city: 'الرياض',
-    district: 'الياسمين',
-    googleMapUrl: 'https://maps.google.com/?q=24.8436,46.6853',
-    status: Status.UnderConstruction,
-    floorsCount: 3,
-    unitsPerFloor: 2,
-    annexCount: 0,
-    basementCount: 0,
-    models: [
-      { id: 'm6', name: 'فيلا شقة دوبلكس', color: 'bg-indigo-600', area: 280, price: 2100000, rooms: 6, bathrooms: 5, halls: 2, finishing: Finishing.Luxury, features: ['مسبح خاص صغير', 'غرفة سينما'] }
-    ],
-    unitMapping: { 
-      'floor-1-1': 'm6', 'floor-1-2': 'm6', 
-      'floor-2-1': 'm6', 'floor-2-2': 'm6'
-    },
-    unitStatus: { 
-      'floor-1-1': UnitAvailability.Available,
-      'floor-1-2': UnitAvailability.Available
-    },
-    unitBookings: {},
-    createdAt: new Date().toISOString()
   }
 ];
 
 export const MOCK_USERS: User[] = [
   {
     id: 'U1',
-    name: 'أحمد الإداري',
+    name: 'admin',
     email: 'admin@alwaseet.com',
+    password: '1234', // كلمة مرور مدير البرنامج المطلوبة
     role: UserRole.Admin,
-    lastLogin: '2024-03-20T10:00:00Z',
+    lastLogin: new Date().toISOString(),
     permissions: {
       canAdd: true, canEdit: true, canDelete: true, canExport: true, canManageUsers: true
     }
@@ -216,6 +189,7 @@ export const MOCK_USERS: User[] = [
     id: 'U3',
     name: 'منصور مدير التسويق',
     email: 'mansour@developer.com',
+    password: 'password',
     role: UserRole.Marketing,
     lastLogin: '2024-03-20T09:00:00Z',
     permissions: {
@@ -226,6 +200,7 @@ export const MOCK_USERS: User[] = [
     id: 'U2',
     name: 'سارة الوسيطة',
     email: 'sara@alwaseet.com',
+    password: 'password',
     role: UserRole.Agent,
     lastLogin: '2024-03-19T14:30:00Z',
     permissions: {

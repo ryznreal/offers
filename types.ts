@@ -158,6 +158,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  password?: string; // كلمة المرور للدخول
   role: UserRole;
   permissions: {
     canAdd: boolean;
