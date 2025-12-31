@@ -46,10 +46,9 @@ export interface BookingDetails {
   customerPhone: string;
   type: UnitAvailability;
   timestamp: string;
-  // الحقول الجديدة
-  brokerageFee: number; // قيمة السعي
-  marketerPercentage: number; // نسبة المسوق
-  isExternalMarketer: boolean; // خارجي أم تابع للشركة
+  brokerageFee: number;
+  marketerPercentage: number;
+  isExternalMarketer: boolean;
 }
 
 export interface Property {
@@ -62,26 +61,20 @@ export interface Property {
   price: number;
   googleMapUrl?: string;
   createdAt: string;
-  
-  // Project linking
   projectId?: string;
   modelId?: string;
   projectDescription?: string;
   projectBrochureUrl?: string;
-
-  // Residential Specific
   status?: Status;
   unitType?: UnitType;
   rooms?: number;
   bathrooms?: number;
-  area?: number; // m2
+  area?: number;
   floor?: string;
   finishing?: Finishing;
   yearBuilt?: number;
   notes?: string;
   unitNumber?: string;
-
-  // Land Specific
   landArea?: number;
   pricePerMeter?: number;
   totalPrice?: number;
@@ -111,22 +104,20 @@ export interface Project {
   id: string;
   name: string;
   developer: string;
-  description?: string; // New
+  description?: string;
   city: string;
   district: string;
-  googleMapUrl?: string; // New
-  brochureUrl?: string; // New (Data URI or URL)
+  googleMapUrl?: string;
+  brochureUrl?: string;
   status: Status;
   floorsCount: number;
   unitsPerFloor: number;
   annexCount: number;
   basementCount: number;
-  
   models: ProjectModel[];
   unitMapping: Record<string, string>;
   unitStatus: Record<string, UnitAvailability>;
   unitBookings: Record<string, BookingDetails>;
-  
   createdAt: string;
 }
 
@@ -158,8 +149,9 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  password?: string; // كلمة المرور للدخول
+  password?: string;
   role: UserRole;
+  assignedDeveloper?: string; // المطور الذي يتبع له (خاص بمدير التسويق)
   permissions: {
     canAdd: boolean;
     canEdit: boolean;
