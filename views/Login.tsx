@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { User, UserRole } from '../types';
-// Added XCircle to the imports to resolve the "Cannot find name 'XCircle'" error on line 99.
 import { Building2, UserCheck, ShieldCheck, Users, ArrowRight, Lock, Mail, Eye, EyeOff, XCircle } from '../components/Icon';
 import { toEnglishDigits } from '../utils/helpers';
 
@@ -20,16 +19,25 @@ export const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
     e.preventDefault();
     setError('');
 
-    // البحث عن المستخدم بالاسم أو البريد الإلكتروني
+    // تنظيف البيانات المدخلة: إزالة المسافات وتحويل اسم المستخدم للحروف الصغيرة
+    const normalizedUsername = username.trim().toLowerCase();
+    const normalizedPassword = toEnglishDigits(password.trim());
+
+    // البحث عن المستخدم مع تجاهل حالة الأحرف في الاسم والبريد
     const user = users.find(u => 
-      (u.name === username || u.email === username) && 
-      u.password === toEnglishDigits(password)
+      (u.name.toLowerCase() === normalizedUsername || u.email.toLowerCase() === normalizedUsername) && 
+      u.password === normalizedPassword
     );
 
     if (user) {
       onLogin(user);
     } else {
-      setError('خطأ في اسم المستخدم أو كلمة المرور');
+      // رسالة خطأ أكثر تفصيلاً للمساعدة في حل المشكلة
+      if (normalizedUsername === 'admin' && normalizedPassword !== '1234') {
+        setError('كلمة المرور غير صحيحة لمدير النظام');
+      } else {
+        setError('خطأ في اسم المستخدم أو كلمة المرور');
+      }
     }
   };
 
@@ -63,7 +71,10 @@ export const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
                   <input 
                     type="text" 
                     required 
-                    placeholder="مثال: أحمد الإداري"
+                    placeholder="admin"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    autoComplete="username"
                     className="w-full bg-gray-50 border-2 border-gray-50 rounded-2xl pr-12 pl-4 py-4 font-bold text-sm outline-none focus:bg-white focus:border-primary-500 transition-all shadow-inner"
                     value={username}
                     onChange={e => setUsername(e.target.value)}
@@ -79,6 +90,7 @@ export const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
                     type={showPassword ? "text" : "password"} 
                     required 
                     placeholder="••••••••"
+                    autoComplete="current-password"
                     className="w-full bg-gray-50 border-2 border-gray-50 rounded-2xl pr-12 pl-12 py-4 font-bold text-sm outline-none focus:bg-white focus:border-primary-500 transition-all shadow-inner text-left"
                     dir="ltr"
                     value={password}
