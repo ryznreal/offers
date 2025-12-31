@@ -1,8 +1,7 @@
 
 import React, { useState } from 'react';
 import { User, UserRole } from '../types';
-import { Building2, UserCheck, ShieldCheck, Users, ArrowRight, Lock, Mail, Eye, EyeOff, XCircle } from '../components/Icon';
-import { toEnglishDigits } from '../utils/helpers';
+import { Building2, UserCheck, ShieldCheck, Users, ArrowRight, XCircle } from '../components/Icon';
 
 interface LoginProps {
   users: User[];
@@ -11,8 +10,6 @@ interface LoginProps {
 
 export const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
   const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
 
   const handleLogin = (e: React.FormEvent) => {
@@ -21,23 +18,16 @@ export const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
 
     // تنظيف البيانات المدخلة: إزالة المسافات وتحويل اسم المستخدم للحروف الصغيرة
     const normalizedUsername = username.trim().toLowerCase();
-    const normalizedPassword = toEnglishDigits(password.trim());
 
-    // البحث عن المستخدم مع تجاهل حالة الأحرف في الاسم والبريد
+    // البحث عن المستخدم بالاسم أو البريد الإلكتروني فقط (بدون كلمة مرور للمراجعة)
     const user = users.find(u => 
-      (u.name.toLowerCase() === normalizedUsername || u.email.toLowerCase() === normalizedUsername) && 
-      u.password === normalizedPassword
+      (u.name.toLowerCase() === normalizedUsername || u.email.toLowerCase() === normalizedUsername)
     );
 
     if (user) {
       onLogin(user);
     } else {
-      // رسالة خطأ أكثر تفصيلاً للمساعدة في حل المشكلة
-      if (normalizedUsername === 'admin' && normalizedPassword !== '1234') {
-        setError('كلمة المرور غير صحيحة لمدير النظام');
-      } else {
-        setError('خطأ في اسم المستخدم أو كلمة المرور');
-      }
+      setError('اسم المستخدم غير موجود في النظام');
     }
   };
 
@@ -50,59 +40,35 @@ export const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
             <Building2 size={48} />
           </div>
           <h1 className="text-3xl font-black text-gray-900">نظام الوسيط العقاري</h1>
-          <p className="text-gray-400 font-bold mt-2 uppercase tracking-widest text-[10px]">Real Estate Management System v2.0</p>
+          <p className="text-gray-400 font-bold mt-2 uppercase tracking-widest text-[10px]">Review Mode - Password Disabled</p>
         </div>
 
         {/* Login Card */}
         <div className="bg-white p-10 rounded-[3rem] shadow-2xl shadow-slate-200 border border-white">
           <div className="flex items-center gap-3 mb-8">
             <div className="p-2 bg-primary-50 text-primary-600 rounded-lg">
-              <Lock size={20} />
+              <UserCheck size={20} />
             </div>
-            <h2 className="text-xl font-black text-gray-800">بوابة الموظفين</h2>
+            <h2 className="text-xl font-black text-gray-800">تسجيل دخول سريع</h2>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-4">
               <div className="relative">
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 mr-1">اسم المستخدم أو البريد</label>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 mr-1">اسم المستخدم (مثال: admin)</label>
                 <div className="relative group">
                   <Users className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-primary-500 transition-colors" size={18} />
                   <input 
                     type="text" 
                     required 
-                    placeholder="admin"
+                    placeholder="ادخل اسم المستخدم هنا..."
                     autoCapitalize="none"
                     autoCorrect="off"
                     autoComplete="username"
-                    className="w-full bg-gray-50 border-2 border-gray-50 rounded-2xl pr-12 pl-4 py-4 font-bold text-sm outline-none focus:bg-white focus:border-primary-500 transition-all shadow-inner"
+                    className="w-full bg-gray-50 border-2 border-gray-50 rounded-2xl pr-12 pl-4 py-5 font-bold text-sm outline-none focus:bg-white focus:border-primary-500 transition-all shadow-inner"
                     value={username}
                     onChange={e => setUsername(e.target.value)}
                   />
-                </div>
-              </div>
-
-              <div className="relative">
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 mr-1">كلمة المرور</label>
-                <div className="relative group">
-                  <Lock className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-primary-500 transition-colors" size={18} />
-                  <input 
-                    type={showPassword ? "text" : "password"} 
-                    required 
-                    placeholder="••••••••"
-                    autoComplete="current-password"
-                    className="w-full bg-gray-50 border-2 border-gray-50 rounded-2xl pr-12 pl-12 py-4 font-bold text-sm outline-none focus:bg-white focus:border-primary-500 transition-all shadow-inner text-left"
-                    dir="ltr"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                  />
-                  <button 
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors"
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
                 </div>
               </div>
             </div>
@@ -118,20 +84,20 @@ export const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
               type="submit" 
               className="w-full py-5 rounded-[2rem] font-black text-lg shadow-xl bg-primary-600 text-white shadow-primary-100 hover:bg-primary-700 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
             >
-              دخول للنظام
+              دخول مباشر
               <ArrowRight size={20} className="rotate-180" />
             </button>
           </form>
 
           <div className="mt-8 text-center">
-            <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest leading-relaxed">
-              إذا فقدت كلمة المرور الخاصة بك<br/>يرجى مراجعة مدير النظام
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed">
+              وضع المراجعة نشط حالياً<br/>يمكنك الدخول باستخدام كلمة: admin
             </p>
           </div>
         </div>
 
         <p className="text-center mt-8 text-[10px] font-bold text-gray-300 uppercase tracking-widest">
-          © {new Date().getFullYear()} جميع الحقوق محفوظة - شركة الوسيط العقاري
+          © {new Date().getFullYear()} شركة الوسيط العقاري
         </p>
       </div>
     </div>
