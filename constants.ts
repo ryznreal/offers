@@ -1,137 +1,115 @@
 
 import { Property, PropertyType, Status, UnitType, Finishing, LandUse, User, UserRole, Project, ProjectModel, UnitAvailability } from './types';
 
-// Programmatic Generator for 150 Demo Properties
-const generateMockProperties = (): Property[] => {
-  const properties: Property[] = [];
-  const cities = ['الرياض', 'جدة', 'الدمام', 'الخبر', 'مكة المكرمة', 'المدينة المنورة'];
-  const districts = ['الملقا', 'النرجس', 'الياسمين', 'حطين', 'الشاطئ', 'الروضة', 'العزيزية', 'الفيحاء', 'النسيم', 'الرحاب'];
-  const developers = ['شركة التطوير الأولى', 'مجموعة الراجحي العقارية', 'بنيان العربية', 'شركة دار الأركان', 'ماجد الفطيم العقارية', 'الأهلي كابيتال العقارية'];
+// 1. مصفوفة المطورين (لإنشاء البيانات)
+const DEV_COMPANIES = [
+  { id: 'dev-1', name: 'إعمار نجد العقارية', key: 'EMAR10', city: 'الرياض' },
+  { id: 'dev-2', name: 'شركة رافال للتطوير', key: 'RAFAL20', city: 'الرياض' },
+  { id: 'dev-3', name: 'مجموعة الماجدية', key: 'MAJED30', city: 'جدة' },
+  { id: 'dev-4', name: 'صروح العمرانية', key: 'SOROUH40', city: 'الدمام' },
+  { id: 'dev-5', name: 'دار الأركان', key: 'DAR50', city: 'مكة المكرمة' },
+  { id: 'dev-6', name: 'شركة رتال للاستثمار', key: 'RETAL60', city: 'الخبر' },
+];
 
-  for (let i = 1; i <= 75; i++) {
-    const isLand = i > 40; 
-    const city = cities[i % cities.length];
-    const district = districts[i % districts.length];
-    const developer = developers[i % developers.length];
-    
-    if (isLand) {
-      const landArea = 350 + (i * 8);
-      const pricePerMeter = 1800 + (i * 15);
-      const totalPrice = landArea * pricePerMeter;
-      
-      properties.push({
-        id: `L-${i}`,
-        type: PropertyType.Land,
-        city,
-        district,
-        developer,
-        price: totalPrice,
-        landArea,
-        pricePerMeter,
-        totalPrice,
-        landUse: i % 3 === 0 ? LandUse.Commercial : (i % 3 === 1 ? LandUse.Residential : LandUse.Investment),
-        streetWidth: 15 + (i % 25),
-        isCorner: i % 4 === 0,
-        investmentAllowed: i % 5 !== 0,
-        landNotes: `أرض مميزة بموقع استراتيجي في ${district}.`,
-        createdAt: new Date(Date.now() - i * 86400000).toISOString(),
-      });
-    } else {
-      const unitTypes = [UnitType.Apartment, UnitType.Villa, UnitType.Duplex, UnitType.Floor, UnitType.Annex];
-      const unitType = unitTypes[i % unitTypes.length];
-      const price = 450000 + (i * 25000);
-      
-      properties.push({
-        id: `R-${i}`,
-        type: PropertyType.Residential,
-        city,
-        district,
-        developer,
-        projectName: `كمبوند ${district} السكني ${i}`,
-        price: price,
-        status: i % 2 === 0 ? Status.Ready : Status.UnderConstruction,
-        unitType,
-        rooms: 2 + (i % 5),
-        bathrooms: 2 + (i % 3),
-        area: 110 + (i * 3),
-        floor: String((i % 5) + 1),
-        finishing: i % 3 === 0 ? Finishing.Luxury : (i % 3 === 1 ? Finishing.Medium : Finishing.Economic),
-        yearBuilt: 2020 + (i % 5),
-        notes: `وحدة سكنية بتصميم عصري في حي ${district}.`,
-        createdAt: new Date(Date.now() - i * 86400000).toISOString(),
+// 2. توليد المستخدمين (مدراء تسويق ومسوقين لكل مطور)
+const generateMockUsers = (): User[] => {
+  const users: User[] = [
+    {
+      id: 'admin-0',
+      name: 'admin',
+      email: 'admin@system.com',
+      role: UserRole.Admin,
+      lastLogin: new Date().toISOString(),
+      permissions: { canAdd: true, canEdit: true, canDelete: true, canExport: true, canManageUsers: true, canManageTeam: true }
+    }
+  ];
+
+  DEV_COMPANIES.forEach((dev) => {
+    // إضافة المطور نفسه
+    users.push({
+      id: dev.id,
+      name: dev.name,
+      email: `ceo@${dev.id}.com`,
+      role: UserRole.Developer,
+      developerId: dev.id,
+      developerKey: dev.key,
+      lastLogin: new Date().toISOString(),
+      permissions: { canAdd: true, canEdit: true, canDelete: true, canExport: true, canManageUsers: false, canManageTeam: true }
+    });
+
+    // إضافة مدير تسويق لكل مطور
+    users.push({
+      id: `mkt-${dev.id}`,
+      name: `مدير تسويق ${dev.name}`,
+      email: `mkt@${dev.id}.com`,
+      role: UserRole.Marketing,
+      developerId: dev.id,
+      parentId: dev.id,
+      lastLogin: new Date().toISOString(),
+      permissions: { canAdd: true, canEdit: true, canDelete: false, canExport: true, canManageUsers: false, canManageTeam: true }
+    });
+
+    // إضافة مسوقين (٢ لكل مطور)
+    for (let i = 1; i <= 2; i++) {
+      users.push({
+        id: `agent-${dev.id}-${i}`,
+        name: `مسوق ${dev.name} ${i}`,
+        email: `agent${i}@${dev.id}.com`,
+        role: UserRole.Agent,
+        developerId: dev.id,
+        parentId: `mkt-${dev.id}`,
+        lastLogin: new Date().toISOString(),
+        permissions: { canAdd: true, canEdit: true, canDelete: false, canExport: true, canManageUsers: false, canManageTeam: false }
       });
     }
-  }
-  return properties;
+  });
+
+  return users;
 };
 
-export const MOCK_PROPERTIES: Property[] = generateMockProperties();
+// 3. توليد المشاريع
+const generateMockProjects = (): Project[] => {
+  const projects: Project[] = [];
+  
+  DEV_COMPANIES.forEach((dev, idx) => {
+    // مشروعين لكل مطور
+    for (let i = 1; i <= 2; i++) {
+      const projId = `p-${dev.id}-${i}`;
+      projects.push({
+        id: projId,
+        name: `مشروع ${dev.name} رقم ${i}`,
+        developer: dev.name,
+        developerId: dev.id,
+        city: dev.city,
+        district: ['النرجس', 'الياسمين', 'الشاطئ', 'الروضة'][idx % 4],
+        status: i % 2 === 0 ? Status.Ready : Status.UnderConstruction,
+        floorsCount: 4 + i,
+        unitsPerFloor: 3 + i,
+        annexCount: 1,
+        basementCount: 1,
+        createdAt: new Date().toISOString(),
+        unitMapping: {},
+        unitStatus: {},
+        unitBookings: {},
+        models: [
+          { id: `${projId}-m1`, name: 'نموذج بريميوم', color: 'bg-blue-600', area: 180, price: 950000 + (idx * 50000), rooms: 4, bathrooms: 3, halls: 1, finishing: Finishing.Luxury, features: ['بلكونة', 'نظام ذكي'] },
+          { id: `${projId}-m2`, name: 'نموذج كلاسيك', color: 'bg-emerald-600', area: 140, price: 750000 + (idx * 50000), rooms: 3, bathrooms: 2, halls: 1, finishing: Finishing.Medium, features: ['دخول ذكي'] }
+        ]
+      });
 
-export const MOCK_PROJECTS: Project[] = [
-  {
-    id: 'proj-1',
-    name: 'سدير ريزيدنس الفاخر',
-    developer: 'بنيان العربية العقارية',
-    city: 'الرياض',
-    district: 'الملقا',
-    googleMapUrl: 'https://maps.google.com/?q=24.8136,46.6153',
-    status: Status.Ready,
-    floorsCount: 6,
-    unitsPerFloor: 4,
-    annexCount: 2,
-    basementCount: 1,
-    models: [
-      { id: 'm1', name: 'جناح ملكي (A)', color: 'bg-blue-600', area: 210, price: 1850000, rooms: 5, bathrooms: 4, halls: 2, finishing: Finishing.Luxury, features: ['نظام ذكي كامل', 'موقف قبو خاص', 'بلكونة إطلالة شمالية'] },
-      { id: 'm2', name: 'مودرن لايف (B)', color: 'bg-emerald-500', area: 155, price: 1100000, rooms: 3, bathrooms: 3, halls: 1, finishing: Finishing.Medium, features: ['دخول ذكي', 'تكييف مركزي'] }
-    ],
-    unitMapping: {
-      'floor-1-1': 'm1', 'floor-1-2': 'm2', 'floor-1-3': 'm2', 'floor-1-4': 'm1',
-      'floor-2-1': 'm1', 'floor-2-2': 'm2', 'floor-2-3': 'm2', 'floor-2-4': 'm1',
-      'floor-3-1': 'm1', 'floor-3-2': 'm2', 'floor-3-3': 'm2', 'floor-3-4': 'm1',
-      'annex-1': 'm1', 'annex-2': 'm1'
-    },
-    unitStatus: {
-      'floor-1-1': UnitAvailability.Sold, 
-      'floor-1-2': UnitAvailability.Available,
-      'floor-1-3': UnitAvailability.Available,
-      'floor-2-1': UnitAvailability.Reserved,
-      'annex-1': UnitAvailability.Available
-    },
-    unitBookings: {
-      'floor-1-1': {
-        unitKey: 'floor-1-1', unitNumber: '101', marketerName: 'فهد المسوق', marketerPhone: '0500000001', customerName: 'خالد العميل', customerPhone: '0599999991', type: UnitAvailability.Sold, timestamp: new Date().toISOString(), brokerageFee: 25000, marketerPercentage: 2.5, isExternalMarketer: false
-      },
-      'floor-2-1': {
-        unitKey: 'floor-2-1', unitNumber: '201', marketerName: 'سارة المسوقة', marketerPhone: '0500000002', customerName: 'نورة العميلة', customerPhone: '0599999992', type: UnitAvailability.Reserved, timestamp: new Date().toISOString(), brokerageFee: 15000, marketerPercentage: 1.5, isExternalMarketer: true
-      }
-    },
-    createdAt: new Date().toISOString()
-  }
-];
-
-export const MOCK_USERS: User[] = [
-  {
-    id: 'U1',
-    name: 'admin',
-    email: 'admin@alwaseet.com',
-    password: '1234', 
-    role: UserRole.Admin,
-    lastLogin: new Date().toISOString(),
-    permissions: {
-      canAdd: true, canEdit: true, canDelete: true, canExport: true, canManageUsers: true
+      // ملء بعض الوحدات للمعاينة
+      const lastProj = projects[projects.length - 1];
+      lastProj.unitMapping['floor-1-1'] = `${projId}-m1`;
+      lastProj.unitMapping['floor-1-2'] = `${projId}-m2`;
+      lastProj.unitStatus['floor-1-1'] = UnitAvailability.Available;
+      lastProj.unitStatus['floor-1-2'] = UnitAvailability.Reserved;
     }
-  },
-  {
-    id: 'U2',
-    name: 'سارة الوسيطة',
-    email: 'sara@alwaseet.com',
-    password: 'password',
-    role: UserRole.Agent,
-    lastLogin: new Date().toISOString(),
-    permissions: {
-      canAdd: true, canEdit: true, canDelete: false, canExport: true, canManageUsers: false
-    }
-  }
-];
+  });
 
+  return projects;
+};
+
+export const MOCK_USERS = generateMockUsers();
+export const MOCK_PROJECTS = generateMockProjects();
+export const MOCK_PROPERTIES: Property[] = []; // سيبدأ فارغاً ويعبأ من قبل المستخدم أو الاستيراد
 export const CITIES = ['الرياض', 'جدة', 'الدمام', 'الخبر', 'مكة المكرمة', 'المدينة المنورة'];

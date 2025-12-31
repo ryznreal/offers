@@ -57,6 +57,7 @@ export interface Property {
   city: string;
   district: string;
   developer: string;
+  developerId?: string; // لربط العقار بمطور محدد
   projectName?: string;
   price: number;
   googleMapUrl?: string;
@@ -104,6 +105,7 @@ export interface Project {
   id: string;
   name: string;
   developer: string;
+  developerId?: string; // لربط المشروع بمطور محدد
   description?: string;
   city: string;
   district: string;
@@ -140,8 +142,9 @@ export interface FilterState {
 
 export enum UserRole {
   Admin = 'مدير نظام',
-  Agent = 'وسيط عقاري',
+  Developer = 'مطور عقاري',
   Marketing = 'مدير تسويق',
+  Agent = 'وسيط عقاري',
   Viewer = 'مشاهد'
 }
 
@@ -151,13 +154,16 @@ export interface User {
   email: string;
   password?: string;
   role: UserRole;
-  assignedDeveloper?: string; // المطور الذي يتبع له (خاص بمدير التسويق)
+  developerId?: string; // معرف فريد للمطور (يربط الفريق به)
+  developerKey?: string; // الرمز المستخدم للدخول (فقط للمطورين)
+  parentId?: string; // من قام بإضافة هذا المستخدم
   permissions: {
     canAdd: boolean;
     canEdit: boolean;
     canDelete: boolean;
     canExport: boolean;
     canManageUsers: boolean;
+    canManageTeam: boolean; // صلاحية إدارة الفريق (للمطور ومدير التسويق)
   };
   lastLogin: string;
 }
