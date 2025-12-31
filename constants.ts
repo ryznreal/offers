@@ -99,11 +99,13 @@ export const MOCK_PROJECTS: Project[] = [
       'annex-1': UnitAvailability.Available
     },
     unitBookings: {
+      // Fix: Added missing brokerageFee, marketerPercentage, and isExternalMarketer to satisfy BookingDetails interface
       'floor-1-1': {
-        unitKey: 'floor-1-1', unitNumber: '101', marketerName: 'فهد المسوق', marketerPhone: '0500000001', customerName: 'خالد العميل', customerPhone: '0599999991', type: UnitAvailability.Sold, timestamp: new Date().toISOString()
+        unitKey: 'floor-1-1', unitNumber: '101', marketerName: 'فهد المسوق', marketerPhone: '0500000001', customerName: 'خالد العميل', customerPhone: '0599999991', type: UnitAvailability.Sold, timestamp: new Date().toISOString(), brokerageFee: 25000, marketerPercentage: 2.5, isExternalMarketer: false
       },
+      // Fix: Added missing brokerageFee, marketerPercentage, and isExternalMarketer to satisfy BookingDetails interface
       'floor-2-1': {
-        unitKey: 'floor-2-1', unitNumber: '201', marketerName: 'سارة المسوقة', marketerPhone: '0500000002', customerName: 'نورة العميلة', customerPhone: '0599999992', type: UnitAvailability.Reserved, timestamp: new Date().toISOString()
+        unitKey: 'floor-2-1', unitNumber: '201', marketerName: 'سارة المسوقة', marketerPhone: '0500000002', customerName: 'نورة العميلة', customerPhone: '0599999992', type: UnitAvailability.Reserved, timestamp: new Date().toISOString(), brokerageFee: 15000, marketerPercentage: 1.5, isExternalMarketer: true
       }
     },
     createdAt: new Date().toISOString()

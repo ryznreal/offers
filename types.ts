@@ -46,6 +46,10 @@ export interface BookingDetails {
   customerPhone: string;
   type: UnitAvailability;
   timestamp: string;
+  // الحقول الجديدة
+  brokerageFee: number; // قيمة السعي
+  marketerPercentage: number; // نسبة المسوق
+  isExternalMarketer: boolean; // خارجي أم تابع للشركة
 }
 
 export interface Property {
