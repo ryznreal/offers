@@ -21,6 +21,7 @@ import {
   Trash2,
   Settings,
   ChevronDown,
+  ChevronUp,
   FileText,
   Upload,
   Download
@@ -39,6 +40,42 @@ const MODEL_COLORS = [
   'bg-indigo-600', 'bg-purple-600', 'bg-cyan-600', 'bg-orange-600'
 ];
 
+/**
+ * مكون حقل رقمي مع أزرار زيادة ونقصان
+ */
+const NumberStepper = ({ label, value, onChange, min = 0 }: { label: string, value: any, onChange: (val: any) => void, min?: number }) => {
+  const numValue = parseArabicNumber(value);
+  
+  return (
+    <div className="space-y-1">
+      <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">{label}</label>
+      <div className="flex items-center bg-gray-50 rounded-xl overflow-hidden border border-gray-100 shadow-sm focus-within:border-primary-300 transition-colors">
+        <button 
+          type="button"
+          onClick={() => onChange(Math.max(min, numValue - 1))}
+          className="p-3 hover:bg-gray-100 text-gray-400 hover:text-primary-600 transition-colors border-l border-gray-100"
+        >
+          <ChevronDown size={16} />
+        </button>
+        <input 
+          type="text" 
+          inputMode="numeric"
+          className="w-full bg-transparent border-none text-center font-black text-sm focus:ring-0 text-gray-800" 
+          value={value} 
+          onChange={e => onChange(e.target.value)} 
+        />
+        <button 
+          type="button"
+          onClick={() => onChange(numValue + 1)}
+          className="p-3 hover:bg-gray-100 text-gray-400 hover:text-primary-600 transition-colors border-r border-gray-100"
+        >
+          <ChevronUp size={16} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
 export const DeveloperProjects: React.FC<DeveloperProjectsProps> = ({ 
   projects, 
   onSaveProject, 
@@ -49,20 +86,21 @@ export const DeveloperProjects: React.FC<DeveloperProjectsProps> = ({
   const [activeModelId, setActiveModelId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  // القيم الافتراضية الجديدة (جدة، بدروم 0)
   const initialFormState: Partial<Project> = {
     id: '',
     name: '',
     developer: '',
     description: '',
-    city: 'الرياض',
+    city: 'جدة',
     district: '',
     googleMapUrl: '',
     brochureUrl: '',
     status: Status.UnderConstruction,
     floorsCount: 4,
     unitsPerFloor: 3,
-    annexCount: 2,
-    basementCount: 1,
+    annexCount: 1,
+    basementCount: 0,
     models: [
       {
         id: 'm1',
@@ -156,34 +194,47 @@ export const DeveloperProjects: React.FC<DeveloperProjectsProps> = ({
       return {
         ...prev,
         unitMapping: newMapping,
-        unitStatus: { ...prev.unitStatus, [key]: prev.unitStatus?.[key] || UnitAvailability.Available }
+        unitStatus: { 
+          ...prev.unitStatus, 
+          [key]: prev.unitStatus?.[key] || UnitAvailability.Available 
+        }
       };
     });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.developer) { alert('الرجاء إكمال بيانات المشروع والمطور'); return; }
-    if (Object.keys(formData.unitMapping || {}).length === 0) {
+    if (!formData.name || !formData.developer) { 
+      alert('الرجاء إكمال بيانات المشروع والمطور'); 
+      return; 
+    }
+    
+    // التحقق من وجود وحدات معينة لضمان وجود بيانات في المشروع
+    if (!formData.unitMapping || Object.keys(formData.unitMapping).length === 0) {
       alert('الرجاء تعيين نماذج للوحدات في المخطط ليتم احتسابها في المشروع');
       return;
     }
 
-    // Clean data before save
+    // تنظيف وتحضير البيانات النهائية للحفظ
     const projectToSave: Project = {
       ...initialFormState,
       ...formData,
       id: formData.id || `P-${Math.random().toString(36).substr(2, 9)}`,
       createdAt: formData.createdAt || new Date().toISOString(),
-      floorsCount: parseArabicNumber(formData.floorsCount || 0),
-      unitsPerFloor: parseArabicNumber(formData.unitsPerFloor || 0),
-      annexCount: parseArabicNumber(formData.annexCount || 0),
-      basementCount: parseArabicNumber(formData.basementCount || 0),
+      floorsCount: parseArabicNumber(formData.floorsCount),
+      unitsPerFloor: parseArabicNumber(formData.unitsPerFloor),
+      annexCount: parseArabicNumber(formData.annexCount),
+      basementCount: parseArabicNumber(formData.basementCount),
+      unitMapping: formData.unitMapping || {},
+      unitStatus: formData.unitStatus || {},
+      unitBookings: formData.unitBookings || {},
+      models: formData.models || []
     } as Project;
 
     onSaveProject(projectToSave);
     alert('تم حفظ المشروع بنجاح');
     setShowAddForm(false);
+    setSelectedProjectId(null);
   };
 
   const renderUnit = (key: string, label: string) => {
@@ -245,11 +296,11 @@ export const DeveloperProjects: React.FC<DeveloperProjectsProps> = ({
                   <div className="p-2 bg-primary-50 text-primary-600 rounded-lg">
                     <Info size={18} />
                   </div>
-                  <span className="text-xs font-black text-gray-600">يمكنك إدخال الأرقام باللغتين العربية والإنجليزية.</span>
+                  <span className="text-xs font-black text-gray-600">سيتم حفظ المشروع فور ضغط الزر، تأكد من تعيين النماذج للوحدات.</span>
                </div>
                <div className="flex items-center gap-4">
                  <button type="submit" className="bg-primary-600 text-white px-10 py-3 rounded-xl font-black text-sm shadow-xl shadow-primary-100 active:scale-95 transition-all">
-                    حفظ واعتماد المشروع
+                    اعتماد وحفظ المشروع
                  </button>
                </div>
             </div>
@@ -271,30 +322,15 @@ export const DeveloperProjects: React.FC<DeveloperProjectsProps> = ({
                      </div>
                      <div className="col-span-2">
                         <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">وصف المشروع</label>
-                        <textarea rows={3} className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-bold text-sm" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="وصف تفصيلي للمشروع ومميزاته..." />
+                        <textarea rows={2} className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-bold text-sm" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="وصف تفصيلي للمشروع..." />
                      </div>
                      <div className="col-span-2">
                         <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">موقع المشروع (جوجل ماب)</label>
                         <input type="url" className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-bold text-sm text-left" dir="ltr" value={formData.googleMapUrl} onChange={e => setFormData({...formData, googleMapUrl: e.target.value})} placeholder="https://maps.google.com/..." />
                      </div>
                      <div className="col-span-2">
-                        <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">بروفايل المشروع (PDF/صورة)</label>
-                        <div className="flex items-center gap-4">
-                           <button 
-                             type="button" 
-                             onClick={() => fileInputRef.current?.click()}
-                             className={`flex-1 flex items-center justify-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed transition-all font-bold text-xs ${formData.brochureUrl ? 'bg-green-50 border-green-200 text-green-700' : 'bg-gray-50 border-gray-200 text-gray-400'}`}
-                           >
-                              {formData.brochureUrl ? <CheckCircle size={16} /> : <Upload size={16} />}
-                              {formData.brochureUrl ? 'تم رفع الملف' : 'اختيار ملف البروفايل'}
-                           </button>
-                           {formData.brochureUrl && (
-                             <button type="button" onClick={() => setFormData({...formData, brochureUrl: ''})} className="p-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition-colors">
-                                <Trash2 size={16} />
-                             </button>
-                           )}
-                        </div>
-                        <input type="file" ref={fileInputRef} className="hidden" accept=".pdf,image/*" onChange={handleFileUpload} />
+                        <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">المطور العقاري</label>
+                        <input type="text" className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-bold text-sm" value={formData.developer} onChange={e => setFormData({...formData, developer: e.target.value})} placeholder="اسم شركة التطوير" />
                      </div>
                      <div>
                         <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">المدينة</label>
@@ -308,49 +344,33 @@ export const DeveloperProjects: React.FC<DeveloperProjectsProps> = ({
                      </div>
                   </div>
 
-                  {/* Structural Settings */}
+                  {/* Structural Settings with Steppers */}
                   <div className="grid grid-cols-2 gap-4 pt-6 border-t border-gray-100">
                      <div className="col-span-2 mb-2"><span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">تكوين الهيكل الإنشائي</span></div>
-                     <div>
-                        <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">الأدوار المتكررة</label>
-                        <input 
-                          type="text" 
-                          inputMode="numeric"
-                          className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-bold text-sm" 
-                          value={formData.floorsCount} 
-                          onChange={e => setFormData({...formData, floorsCount: parseArabicNumber(e.target.value)})} 
-                        />
-                     </div>
-                     <div>
-                        <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">وحدات في كل دور</label>
-                        <input 
-                          type="text" 
-                          inputMode="numeric"
-                          className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-bold text-sm" 
-                          value={formData.unitsPerFloor} 
-                          onChange={e => setFormData({...formData, unitsPerFloor: parseArabicNumber(e.target.value)})} 
-                        />
-                     </div>
-                     <div>
-                        <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">عدد الملاحق (Annex)</label>
-                        <input 
-                          type="text" 
-                          inputMode="numeric"
-                          className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-bold text-sm" 
-                          value={formData.annexCount} 
-                          onChange={e => setFormData({...formData, annexCount: parseArabicNumber(e.target.value)})} 
-                        />
-                     </div>
-                     <div>
-                        <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">عدد البدرومات (Basement)</label>
-                        <input 
-                          type="text" 
-                          inputMode="numeric"
-                          className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-bold text-sm" 
-                          value={formData.basementCount} 
-                          onChange={e => setFormData({...formData, basementCount: parseArabicNumber(e.target.value)})} 
-                        />
-                     </div>
+                     
+                     <NumberStepper 
+                        label="الأدوار المتكررة" 
+                        value={formData.floorsCount} 
+                        onChange={val => setFormData({...formData, floorsCount: val})} 
+                     />
+                     
+                     <NumberStepper 
+                        label="وحدات في كل دور" 
+                        value={formData.unitsPerFloor} 
+                        onChange={val => setFormData({...formData, unitsPerFloor: val})} 
+                     />
+
+                     <NumberStepper 
+                        label="عدد الملاحق (Annex)" 
+                        value={formData.annexCount} 
+                        onChange={val => setFormData({...formData, annexCount: val})} 
+                     />
+
+                     <NumberStepper 
+                        label="عدد البدرومات (Basement)" 
+                        value={formData.basementCount} 
+                        onChange={val => setFormData({...formData, basementCount: val})} 
+                     />
                   </div>
                 </div>
 
@@ -366,12 +386,12 @@ export const DeveloperProjects: React.FC<DeveloperProjectsProps> = ({
                     </button>
                   </div>
                   
-                  <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                     {formData.models?.map(m => (
                       <div 
                         key={m.id} 
                         onClick={() => setActiveModelId(m.id)}
-                        className={`p-5 rounded-3xl border-2 transition-all relative cursor-pointer ${activeModelId === m.id ? 'border-primary-500 bg-primary-50/20' : 'border-gray-100 bg-gray-50/50'}`}
+                        className={`p-5 rounded-3xl border-2 transition-all relative cursor-pointer ${activeModelId === m.id ? 'border-primary-500 bg-primary-50/20 shadow-md' : 'border-gray-100 bg-gray-50/50'}`}
                       >
                         <div className="flex items-center gap-3 mb-4">
                            <div className={`w-4 h-4 rounded-full shrink-0 ${m.color}`}></div>
@@ -405,19 +425,24 @@ export const DeveloperProjects: React.FC<DeveloperProjectsProps> = ({
                   <div className="bg-white p-10 md:p-14 rounded-[4rem] shadow-2xl border-b-[24px] border-gray-400 relative w-full max-w-3xl overflow-y-auto max-h-[90vh] custom-scrollbar">
                     
                     <div className="text-center mb-10 sticky top-0 bg-white z-10 py-4 border-b border-gray-50">
-                       <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] mb-4">انقر على وحدة لتعيين النموذج المختار</p>
+                       <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] mb-4">انقر على وحدة لتعيين النموذج المختار ({formData.models?.find(m => m.id === activeModelId)?.name || 'لم يتم الاختيار'})</p>
                        <div className="flex justify-center gap-3 flex-wrap">
                           {formData.models?.map(m => (
-                            <div key={m.id} className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${activeModelId === m.id ? 'bg-primary-100 border-primary-200 ring-2 ring-primary-50' : 'bg-gray-50 border-gray-100'}`}>
-                               <div className={`w-2.5 h-2.5 rounded-full ${m.color}`}></div>
-                               <span className="text-[9px] font-black text-gray-600">{m.name}</span>
-                            </div>
+                            <button 
+                              type="button"
+                              key={m.id} 
+                              onClick={() => setActiveModelId(m.id)}
+                              className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${activeModelId === m.id ? 'bg-primary-100 border-primary-200 ring-4 ring-primary-50' : 'bg-gray-50 border-gray-100 hover:border-gray-200'}`}
+                            >
+                               <div className={`w-3 h-3 rounded-full ${m.color}`}></div>
+                               <span className="text-[10px] font-black text-gray-700">{m.name}</span>
+                            </button>
                           ))}
                        </div>
                     </div>
 
                     <div className="space-y-6">
-                      {/* ANNEXES SECTION (TOP) */}
+                      {/* ANNEXES SECTION */}
                       {parseArabicNumber(formData.annexCount || 0) > 0 && (
                         <div className="animate-in fade-in slide-in-from-top-4">
                            <div className="text-center mb-3">
@@ -430,7 +455,7 @@ export const DeveloperProjects: React.FC<DeveloperProjectsProps> = ({
                         </div>
                       )}
 
-                      {/* FLOORS SECTION (MIDDLE) */}
+                      {/* FLOORS SECTION */}
                       {Array.from({ length: parseArabicNumber(formData.floorsCount || 0) }).map((_, fIdx) => {
                         const floorNum = (parseArabicNumber(formData.floorsCount || 0)) - fIdx;
                         return (
@@ -447,7 +472,7 @@ export const DeveloperProjects: React.FC<DeveloperProjectsProps> = ({
                         );
                       })}
 
-                      {/* BASEMENTS SECTION (BOTTOM) */}
+                      {/* BASEMENTS SECTION */}
                       {parseArabicNumber(formData.basementCount || 0) > 0 && (
                         <div className="animate-in fade-in slide-in-from-bottom-4 pt-4">
                            <div className="w-full h-1 bg-gray-100 mb-6 rounded-full"></div>
@@ -462,7 +487,7 @@ export const DeveloperProjects: React.FC<DeveloperProjectsProps> = ({
                     </div>
 
                     <div className="mt-12 text-center opacity-60">
-                       <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest bg-gray-50 px-8 py-3 rounded-full border border-gray-100">طابق الخدمات والمدخل الرئيسي</span>
+                       <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest bg-gray-50 px-8 py-3 rounded-full border border-gray-100">طابق الخدمات والمدخل الرئيسي</span>
                     </div>
                   </div>
                 </div>
@@ -475,7 +500,7 @@ export const DeveloperProjects: React.FC<DeveloperProjectsProps> = ({
               <div className="col-span-full py-48 bg-white rounded-[6rem] border-4 border-dashed border-gray-50 text-center flex flex-col items-center justify-center">
                 <Building2 size={80} className="text-gray-100 mb-8" />
                 <h3 className="text-2xl font-black text-gray-300 mb-4">لا توجد مشاريع حالياً</h3>
-                <button onClick={() => setShowAddForm(true)} className="bg-primary-600 text-white px-12 py-4 rounded-3xl font-black shadow-xl shadow-primary-100">
+                <button onClick={() => { setFormData(initialFormState); setShowAddForm(true); }} className="bg-primary-600 text-white px-12 py-4 rounded-3xl font-black shadow-xl shadow-primary-100 active:scale-95 transition-all">
                    تصميم أول مشروع الآن
                 </button>
               </div>
