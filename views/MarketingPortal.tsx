@@ -203,11 +203,31 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
              <div className="lg:col-span-8">
                 <div className="bg-gray-100 p-8 rounded-[3.5rem] border border-gray-200 shadow-inner flex flex-col items-center min-h-[600px] justify-center relative overflow-hidden">
                    <div className="bg-white p-10 rounded-[3rem] shadow-2xl border-b-[16px] border-gray-400 relative w-full max-w-2xl">
+                      
+                      {/* Legend Bar */}
                       <div className="flex justify-center gap-6 mb-8 border-b border-gray-50 pb-6">
                          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-green-600"></div><span className="text-[10px] font-black text-gray-400 uppercase">متاح</span></div>
                          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-sky-400"></div><span className="text-[10px] font-black text-gray-400 uppercase">محجوز</span></div>
                          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-600"></div><span className="text-[10px] font-black text-gray-400 uppercase">مباع</span></div>
                       </div>
+
+                      {/* --- ANNEXES (RESTORED) --- */}
+                      {selectedProject.annexCount! > 0 && (
+                        <div className="flex justify-center gap-3 mb-8 animate-in slide-in-from-top-2">
+                          {Array.from({ length: selectedProject.annexCount! }).map((_, i) => {
+                            const key = `annex-${i+1}`;
+                            if (!selectedProject.unitMapping[key]) return null;
+                            const status = selectedProject.unitStatus[key] || UnitAvailability.Available;
+                            return (
+                              <div key={key} onClick={() => handleUnitClick(key)} className={`w-14 h-14 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all border-2 ${getStatusColor(status)} shadow-sm hover:scale-105 active:scale-95`}>
+                                 <Home size={16} />
+                                 <span className="text-[9px] font-black mt-0.5">M{i+1}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
                       <div className="space-y-4">
                         {Array.from({ length: selectedProject.floorsCount! }).map((_, fIdx) => {
                           const floorNum = selectedProject.floorsCount! - fIdx;
@@ -270,7 +290,7 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
           </div>
         )}
 
-        {/* --- Booking Form Modal (Refined & Compact) --- */}
+        {/* --- Booking Form Modal --- */}
         {showBookingForm && selectedUnitKey && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
              <div className="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 text-right h-fit max-h-[95vh] flex flex-col" dir="rtl">
@@ -278,7 +298,7 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
                 {/* Modal Header */}
                 <div className="px-8 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                    <div>
-                      <h3 className="text-xl font-black text-gray-900">حجز وحدة {selectedUnitKey.includes('floor') ? selectedUnitKey.split('-').slice(1).join('') : selectedUnitKey}</h3>
+                      <h3 className="text-xl font-black text-gray-900">حجز وحدة {selectedUnitKey.includes('floor') ? selectedUnitKey.split('-').slice(1).join('') : (selectedUnitKey.includes('annex') ? 'ملحق ' + selectedUnitKey.split('-')[1] : selectedUnitKey)}</h3>
                       <p className="text-[11px] font-bold text-sky-600 mt-0.5">إدخال بيانات الحجز المالية والتفصيلية</p>
                    </div>
                    <button onClick={() => setShowBookingForm(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400"><XCircle size={28} /></button>
@@ -304,7 +324,7 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
                      </div>
                    )}
 
-                   {/* Status Selector Buttons (Smaller) */}
+                   {/* Status Selector */}
                    <div className="grid grid-cols-3 gap-3">
                       <button onClick={() => setBookingType(UnitAvailability.Available)} type="button" className={`py-4 rounded-2xl border-2 transition-all font-black text-xs flex flex-col items-center gap-2 ${bookingType === UnitAvailability.Available ? 'border-green-500 bg-green-50 text-green-700 shadow-md' : 'border-gray-50 bg-gray-50 text-gray-400'}`}>
                          <CheckCircle size={20} /> متاحة
@@ -319,7 +339,7 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
 
                    {bookingType !== UnitAvailability.Available && (
                      <div className="space-y-6">
-                        {/* Marketer & Financial Section */}
+                        {/* Marketer & Financial */}
                         <div className="bg-white border border-gray-100 p-5 rounded-2xl space-y-4 shadow-sm">
                            <div className="flex justify-between items-center mb-1">
                               <label className="text-[10px] font-black text-gray-400 uppercase flex items-center gap-1.5"><UserCheck size={14} /> بيانات المسوق</label>
@@ -344,7 +364,7 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
                            </div>
                         </div>
 
-                        {/* Customer Section */}
+                        {/* Customer */}
                         <div className="bg-white border border-gray-100 p-5 rounded-2xl space-y-4 shadow-sm">
                            <label className="text-[10px] font-black text-gray-400 uppercase flex items-center gap-1.5"><Users size={14} /> بيانات العميل</label>
                            <div className="grid grid-cols-2 gap-4">
@@ -356,9 +376,9 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
                    )}
                 </div>
 
-                {/* Modal Footer (Compact) */}
-                <div className="px-8 py-5 bg-gray-50 border-t border-gray-100 flex gap-3">
-                   <button onClick={(e) => {
+                {/* Footer */}
+                <div className="px-8 py-5 bg-gray-50 border-t border-gray-100 flex gap-3 shrink-0">
+                   <button onClick={() => {
                      if (!selectedProject || !selectedUnitKey) return;
                      const updatedProject = { ...selectedProject };
                      if (bookingType === UnitAvailability.Available) {
@@ -368,7 +388,7 @@ export const MarketingPortal: React.FC<MarketingPortalProps> = ({ projects, onUp
                        updatedProject.unitStatus[selectedUnitKey] = bookingType;
                        updatedProject.unitBookings[selectedUnitKey] = {
                          unitKey: selectedUnitKey,
-                         unitNumber: selectedUnitKey.includes('floor') ? selectedUnitKey.split('-').slice(1).join('') : selectedUnitKey,
+                         unitNumber: selectedUnitKey.includes('floor') ? selectedUnitKey.split('-').slice(1).join('') : (selectedUnitKey.includes('annex') ? 'M' + selectedUnitKey.split('-')[1] : selectedUnitKey),
                          marketerName: bookingData.marketerName || '',
                          marketerPhone: bookingData.marketerPhone || '',
                          customerName: bookingData.customerName || '',
