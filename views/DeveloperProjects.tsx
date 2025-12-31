@@ -186,6 +186,23 @@ export const DeveloperProjects: React.FC<DeveloperProjectsProps> = ({
     setShowAddForm(false);
   };
 
+  const renderUnit = (key: string, label: string) => {
+    const modelId = formData.unitMapping?.[key];
+    const model = formData.models?.find(m => m.id === modelId);
+
+    return (
+      <div 
+        key={key} 
+        onClick={() => handleUnitClick(key)} 
+        className={`flex-1 h-16 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all border-2 relative group
+          ${model ? model.color + ' text-white border-transparent shadow-lg scale-105' : 'bg-blue-50/10 border-blue-50 text-blue-100 hover:bg-blue-50 hover:border-blue-300 shadow-sm'}`}
+      >
+        <span className="text-[10px] font-black">{label}</span>
+        {!model && <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Plus size={14} className="text-gray-400" /></div>}
+      </div>
+    );
+  };
+
   return (
     <div className="p-4 md:p-8 md:pr-[288px] bg-gray-50 min-h-screen pb-20 text-right" dir="rtl">
       <div className="max-w-7xl mx-auto">
@@ -238,6 +255,7 @@ export const DeveloperProjects: React.FC<DeveloperProjectsProps> = ({
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              {/* Left Column: Form Settings */}
               <div className="lg:col-span-5 space-y-6">
                 
                 <div className="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm space-y-6">
@@ -290,8 +308,9 @@ export const DeveloperProjects: React.FC<DeveloperProjectsProps> = ({
                      </div>
                   </div>
 
+                  {/* Structural Settings */}
                   <div className="grid grid-cols-2 gap-4 pt-6 border-t border-gray-100">
-                     <div className="col-span-2 mb-2"><span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">تكوين الهيكل</span></div>
+                     <div className="col-span-2 mb-2"><span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">تكوين الهيكل الإنشائي</span></div>
                      <div>
                         <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">الأدوار المتكررة</label>
                         <input 
@@ -312,9 +331,30 @@ export const DeveloperProjects: React.FC<DeveloperProjectsProps> = ({
                           onChange={e => setFormData({...formData, unitsPerFloor: parseArabicNumber(e.target.value)})} 
                         />
                      </div>
+                     <div>
+                        <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">عدد الملاحق (Annex)</label>
+                        <input 
+                          type="text" 
+                          inputMode="numeric"
+                          className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-bold text-sm" 
+                          value={formData.annexCount} 
+                          onChange={e => setFormData({...formData, annexCount: parseArabicNumber(e.target.value)})} 
+                        />
+                     </div>
+                     <div>
+                        <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">عدد البدرومات (Basement)</label>
+                        <input 
+                          type="text" 
+                          inputMode="numeric"
+                          className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-bold text-sm" 
+                          value={formData.basementCount} 
+                          onChange={e => setFormData({...formData, basementCount: parseArabicNumber(e.target.value)})} 
+                        />
+                     </div>
                   </div>
                 </div>
 
+                {/* Model Settings */}
                 <div className="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm space-y-6">
                   <div className="flex justify-between items-center mb-2">
                     <div className="flex items-center gap-2">
@@ -359,14 +399,16 @@ export const DeveloperProjects: React.FC<DeveloperProjectsProps> = ({
                 </div>
               </div>
 
+              {/* Right Column: Visual Blueprint */}
               <div className="lg:col-span-7">
                 <div className="bg-gray-200 p-8 rounded-[4rem] border border-gray-300 shadow-inner flex flex-col items-center min-h-[800px] justify-center relative overflow-hidden">
-                  <div className="bg-white p-12 rounded-[4rem] shadow-2xl border-b-[24px] border-gray-400 relative w-full max-w-3xl">
-                    <div className="text-center mb-10">
-                       <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] mb-4">اختر نموذجاً ثم عينه للوحدات التي سيتم عرضها</p>
-                       <div className="flex justify-center gap-4 flex-wrap">
+                  <div className="bg-white p-10 md:p-14 rounded-[4rem] shadow-2xl border-b-[24px] border-gray-400 relative w-full max-w-3xl overflow-y-auto max-h-[90vh] custom-scrollbar">
+                    
+                    <div className="text-center mb-10 sticky top-0 bg-white z-10 py-4 border-b border-gray-50">
+                       <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] mb-4">انقر على وحدة لتعيين النموذج المختار</p>
+                       <div className="flex justify-center gap-3 flex-wrap">
                           {formData.models?.map(m => (
-                            <div key={m.id} className={`flex items-center gap-2 px-3 py-1 rounded-full border transition-all ${activeModelId === m.id ? 'bg-primary-100 border-primary-200' : 'bg-gray-50 border-gray-100'}`}>
+                            <div key={m.id} className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${activeModelId === m.id ? 'bg-primary-100 border-primary-200 ring-2 ring-primary-50' : 'bg-gray-50 border-gray-100'}`}>
                                <div className={`w-2.5 h-2.5 rounded-full ${m.color}`}></div>
                                <span className="text-[9px] font-black text-gray-600">{m.name}</span>
                             </div>
@@ -375,39 +417,52 @@ export const DeveloperProjects: React.FC<DeveloperProjectsProps> = ({
                     </div>
 
                     <div className="space-y-6">
+                      {/* ANNEXES SECTION (TOP) */}
+                      {parseArabicNumber(formData.annexCount || 0) > 0 && (
+                        <div className="animate-in fade-in slide-in-from-top-4">
+                           <div className="text-center mb-3">
+                              <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest bg-indigo-50 px-4 py-1 rounded-full">الملاحق (Annex)</span>
+                           </div>
+                           <div className="flex justify-center gap-4">
+                              {Array.from({ length: parseArabicNumber(formData.annexCount || 0) }).map((_, i) => renderUnit(`annex-${i+1}`, `M${i+1}`))}
+                           </div>
+                           <div className="w-full h-1 bg-gray-100 my-6 rounded-full"></div>
+                        </div>
+                      )}
+
+                      {/* FLOORS SECTION (MIDDLE) */}
                       {Array.from({ length: parseArabicNumber(formData.floorsCount || 0) }).map((_, fIdx) => {
                         const floorNum = (parseArabicNumber(formData.floorsCount || 0)) - fIdx;
                         return (
-                          <div key={floorNum} className="flex items-center gap-10">
-                            <div className="w-16 shrink-0 text-left border-l border-gray-100 pr-2">
-                               <span className="text-lg font-black text-gray-400">{floorNum}</span>
+                          <div key={floorNum} className="flex items-center gap-6 md:gap-10">
+                            <div className="w-10 shrink-0 text-left border-l border-gray-100 pr-2">
+                               <span className="text-sm font-black text-gray-400">F{floorNum}</span>
                             </div>
-                            <div className="flex-1 flex justify-center gap-6">
-                              {Array.from({ length: parseArabicNumber(formData.unitsPerFloor || 0) }).map((_, uIdx) => {
-                                const key = `floor-${floorNum}-${uIdx+1}`;
-                                const modelId = formData.unitMapping?.[key];
-                                const model = formData.models?.find(m => m.id === modelId);
-
-                                return (
-                                  <div 
-                                    key={key} 
-                                    onClick={() => handleUnitClick(key)} 
-                                    className={`flex-1 h-20 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all border-2 relative group
-                                      ${model ? model.color + ' text-white border-transparent shadow-lg scale-110' : 'bg-blue-50/10 border-blue-50 text-blue-100 hover:bg-blue-50 hover:border-blue-300 shadow-sm'}`}
-                                  >
-                                    <span className="text-xs font-black">{floorNum}0{uIdx+1}</span>
-                                    {!model && <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Plus size={16} className="text-gray-400" /></div>}
-                                  </div>
-                                );
-                              })}
+                            <div className="flex-1 flex justify-center gap-3 md:gap-5">
+                              {Array.from({ length: parseArabicNumber(formData.unitsPerFloor || 0) }).map((_, uIdx) => 
+                                renderUnit(`floor-${floorNum}-${uIdx+1}`, `${floorNum}0${uIdx+1}`)
+                              )}
                             </div>
                           </div>
                         );
                       })}
+
+                      {/* BASEMENTS SECTION (BOTTOM) */}
+                      {parseArabicNumber(formData.basementCount || 0) > 0 && (
+                        <div className="animate-in fade-in slide-in-from-bottom-4 pt-4">
+                           <div className="w-full h-1 bg-gray-100 mb-6 rounded-full"></div>
+                           <div className="text-center mb-3">
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 px-4 py-1 rounded-full">البدرومات (Basement)</span>
+                           </div>
+                           <div className="flex justify-center gap-4">
+                              {Array.from({ length: parseArabicNumber(formData.basementCount || 0) }).map((_, i) => renderUnit(`basement-${i+1}`, `B${i+1}`))}
+                           </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="mt-12 text-center opacity-60">
-                       <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest bg-gray-50 px-8 py-3 rounded-full border border-gray-100">طابق الخدمات والمدخل</span>
+                       <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest bg-gray-50 px-8 py-3 rounded-full border border-gray-100">طابق الخدمات والمدخل الرئيسي</span>
                     </div>
                   </div>
                 </div>
