@@ -7,6 +7,7 @@ import { ViewProperty } from './views/ViewProperty';
 import { AdminPanel } from './views/AdminPanel';
 import { DeveloperProjects } from './views/DeveloperProjects';
 import { MarketingPortal } from './views/MarketingPortal'; 
+import { Login } from './views/Login';
 import { Property, PropertyType, FilterState, Status, User, UserRole, Project, UnitType, Finishing, UnitAvailability } from './types';
 import { MOCK_PROPERTIES, MOCK_USERS, MOCK_PROJECTS } from './constants';
 import { Plus, Building2, Map, ShieldCheck, Share2 } from './components/Icon';
@@ -15,7 +16,8 @@ import { Plus, Building2, Map, ShieldCheck, Share2 } from './components/Icon';
 const STORAGE_KEYS = {
   PROPERTIES: 'realestate_base_properties',
   PROJECTS: 'realestate_projects',
-  USERS: 'realestate_users'
+  USERS: 'realestate_users',
+  AUTH: 'realestate_auth_user'
 };
 
 function App() {
@@ -37,9 +39,12 @@ function App() {
     return saved ? JSON.parse(saved) : MOCK_USERS;
   });
 
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.AUTH);
+    return saved ? JSON.parse(saved) : null;
+  });
+
   const [properties, setProperties] = useState<Property[]>([]);
-  const [currentUser, setCurrentUser] = useState<User>(users[1] || MOCK_USERS[1]); 
-  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const [filter, setFilter] = useState<FilterState>({
@@ -69,6 +74,14 @@ function App() {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
   }, [users]);
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(STORAGE_KEYS.AUTH, JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.AUTH);
+    }
+  }, [currentUser]);
 
   const refreshDisplayProperties = useCallback(() => {
     const projectGeneratedProperties: Property[] = [];
@@ -149,11 +162,23 @@ function App() {
   const handleAddUser = (newUser: User) => setUsers(prev => [newUser, ...prev]);
   const handleUpdateUser = (updatedUser: User) => {
     setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
-    if (currentUser.id === updatedUser.id) setCurrentUser(updatedUser);
+    if (currentUser?.id === updatedUser.id) setCurrentUser(updatedUser);
   };
   const handleDeleteUser = (userId: string) => {
     setUsers(prev => prev.filter(u => u.id !== userId));
   };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setView('list');
+  };
+
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+
+  // إذا لم يكن هناك مستخدم مسجل، اعرض صفحة الدخول
+  if (!currentUser) {
+    return <Login users={users} onLogin={setCurrentUser} />;
+  }
 
   const renderContent = () => {
     switch (view) {
@@ -296,6 +321,7 @@ function App() {
         isMobileOpen={isMobileMenuOpen}
         onCloseMobile={() => setIsMobileMenuOpen(false)}
         user={currentUser}
+        onLogout={handleLogout}
       />
       
       <div className="md:hidden bg-white p-4 shadow-sm flex justify-between items-center sticky top-0 z-40 border-b border-gray-100 no-print">

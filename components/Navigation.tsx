@@ -11,9 +11,10 @@ import {
   ShieldCheck,
   Share2,
   Ruler,
-  CheckCircle as Check
+  CheckCircle as Check,
+  XCircle as LogOutIcon
 } from './Icon';
-import { PropertyType, Status, UnitType, FilterState, User, LandUse } from '../types';
+import { PropertyType, Status, UnitType, FilterState, User, LandUse, UserRole } from '../types';
 
 interface NavigationProps {
   currentView: string;
@@ -23,6 +24,7 @@ interface NavigationProps {
   isMobileOpen?: boolean;
   onCloseMobile?: () => void;
   user: User;
+  onLogout?: () => void;
 }
 
 export const Navigation: React.FC<NavigationProps> = ({ 
@@ -32,7 +34,8 @@ export const Navigation: React.FC<NavigationProps> = ({
   setFilter,
   isMobileOpen = false,
   onCloseMobile,
-  user
+  user,
+  onLogout
 }) => {
   const isResidentialView = filter.type === PropertyType.Residential || filter.type === 'All';
   const isLandView = filter.type === PropertyType.Land;
@@ -90,25 +93,34 @@ export const Navigation: React.FC<NavigationProps> = ({
             الوسيط العقاري
           </h1>
           
-          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl">
+          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl relative group">
              <div className="w-10 h-10 rounded-full bg-primary-600 text-white flex items-center justify-center font-black">
                 {user.name.charAt(0)}
              </div>
-             <div>
-                <p className="text-xs font-black text-gray-900">{user.name}</p>
+             <div className="flex-1 overflow-hidden">
+                <p className="text-xs font-black text-gray-900 truncate">{user.name}</p>
                 <p className="text-[10px] text-primary-600 font-bold">{user.role}</p>
              </div>
+             {onLogout && (
+               <button 
+                 onClick={onLogout}
+                 className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                 title="تسجيل الخروج"
+               >
+                 <LogOutIcon size={16} />
+               </button>
+             )}
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-8 pb-10 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-4 space-y-8 pb-10 custom-scrollbar text-right">
           {/* Main Navigation */}
           <section>
             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 block px-2">القائمة الرئيسية</label>
             <div className="space-y-1">
               <button
                 onClick={() => handleLinkClick('list')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                className={`w-full flex items-center justify-start gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                   currentView === 'list' ? 'bg-primary-50 text-primary-700 font-bold' : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
@@ -118,7 +130,7 @@ export const Navigation: React.FC<NavigationProps> = ({
 
               <button
                 onClick={() => handleLinkClick('marketing')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                className={`w-full flex items-center justify-start gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                   currentView === 'marketing' ? 'bg-orange-50 text-orange-700 font-bold' : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
@@ -128,7 +140,7 @@ export const Navigation: React.FC<NavigationProps> = ({
 
               <button
                 onClick={() => handleLinkClick('projects')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                className={`w-full flex items-center justify-start gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                   currentView === 'projects' ? 'bg-primary-50 text-primary-700 font-bold' : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
@@ -139,7 +151,7 @@ export const Navigation: React.FC<NavigationProps> = ({
               {user.permissions.canManageUsers && (
                 <button
                   onClick={() => handleLinkClick('admin')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                  className={`w-full flex items-center justify-start gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                     currentView === 'admin' ? 'bg-primary-50 text-primary-700 font-bold' : 'text-gray-600 hover:bg-gray-50'
                   }`}
                 >
